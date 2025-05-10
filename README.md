@@ -227,7 +227,7 @@ MedAlarm'ın gelişimine katkıda bulunmak ister misiniz? Sağlık teknolojileri
 ---
 
 <div align="center">
-  <img src="assets/images/placeholder.png" alt="MedAlarm Icon" width="60">
+  <img src="https://github.com/user-attachments/assets/53e2bc19-574d-4a34-aee9-d16090517cab" alt="MedAlarm Icon" width="60">
   <h3>Sağlığınızı MedAlarm'a emanet edin!</h3>
   <p><i>Çünkü sağlığınız, bizim önceliğimiz.</i></p>
   <p>MedAlarm, ❤️ ve ☕ ile Türkiye'de geliştirilmiştir | © 2025</p>
