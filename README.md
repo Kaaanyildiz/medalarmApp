@@ -1,8 +1,8 @@
-# MedAlarm <img src="assets/images/placeholder.png" alt="MedAlarm Logo" width="30">
+# MedAlarm <img src="https://github.com/user-attachments/assets/53e2bc19-574d-4a34-aee9-d16090517cab" alt="MedAlarm Logo" width="30">
 
 <div align="center">
   <h1>💊 İlaç Takip ve Hatırlatma Asistanınız 💊</h1>
-  <img src="assets/images/placeholder.png" alt="MedAlarm Logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+  <img src="https://github.com/user-attachments/assets/53e2bc19-574d-4a34-aee9-d16090517cab" alt="MedAlarm Logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
   
   [![Flutter Version](https://img.shields.io/badge/Flutter-3.7.0+-02569B?logo=flutter&logoColor=white&style=for-the-badge)](https://flutter.dev)
   [![Dart Version](https://img.shields.io/badge/Dart-3.0.0+-0175C2?logo=dart&logoColor=white&style=for-the-badge)](https://dart.dev)
