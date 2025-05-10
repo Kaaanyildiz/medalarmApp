@@ -21,7 +21,7 @@ migrate_working_dir/
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
-#.vscode/
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -43,3 +43,46 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive files
+*.jks
+*.keystore
+key.properties
+google-services.json
+GoogleService-Info.plist
+*.aab
+*.apk
+
+# Firebase-related
+firebase_options.dart
+firebase_app_id_file.json
+
+# Environment variables and config
+.env
+.env.*
+*.env.local
+config.json
+secrets.json
+.secrets
+
+# Local Netlify folder
+.netlify
+
+# User-specific files
+user_data.json
+settings.json
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Logs
+logs/
+*.log.*
+
+# Web related
+/assets/web/js/analytics.js
