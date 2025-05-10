@@ -122,7 +122,7 @@ MedAlarm, ilaç tedavinizi **kusursuz bir şekilde** yönetmenize yardımcı ola
 
 ```bash
 # Projeyi bilgisayarınıza indirin
-git clone https://github.com/yourusername/medalarmm.git
+git clone https://github.com/Kaaanyildiz/medalarmm.git
 
 # Proje klasörüne gidin
 cd medalarmm
