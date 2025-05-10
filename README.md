@@ -219,9 +219,8 @@ MedAlarm'ın gelişimine katkıda bulunmak ister misiniz? Sağlık teknolojileri
 ## 📞 İletişim
 
 <div align="center">
-  <a href="mailto:info@medalarm.com"><img src="https://img.shields.io/badge/Email-info%40medalarm.com-red?style=for-the-badge&logo=gmail"></a>
-  <a href="https://twitter.com/medalarm"><img src="https://img.shields.io/badge/Twitter-%40medalarm-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white"></a>
-  <a href="https://www.linkedin.com/company/medalarm"><img src="https://img.shields.io/badge/LinkedIn-medalarm-0077B5?style=for-the-badge&logo=linkedin"></a>
+  <a href="mailto:kaaanyildz@gmail.com"><img src="https://img.shields.io/badge/Email-kaaanyildz%40gmail.com-red?style=for-the-badge&logo=gmail"></a>
+  <a href="www.linkedin.com/in/kaanyıldız1"><img src="https://img.shields.io/badge/LinkedIn-kaanyıldız1-0077B5?style=for-the-badge&logo=linkedin"></a>
 </div>
 
 ---
