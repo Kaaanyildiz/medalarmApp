@@ -11,13 +11,13 @@
 
 ## Güvenlik Açığı Bildirme
 
-MedAlarm projesinde bir güvenlik açığı keşfederseniz, lütfen [info@medalarm.com](mailto:info@medalarm.com) adresine e-posta göndererek sorumlu bir şekilde bildirin. Tüm güvenlik açıkları ciddiye alınacak ve hızla ele alınacaktır.
+MedAlarm projesinde bir güvenlik açığı keşfederseniz, lütfen [kaaanyildz@gmail.com](kaaanyildz@gmail.com) adresine e-posta göndererek sorumlu bir şekilde bildirin. Tüm güvenlik açıkları ciddiye alınacak ve hızla ele alınacaktır.
 
 Bildirdiğiniz güvenlik açığının durumu hakkında sizi güncel tutacağız.
 
 ## Güvenlik Açığı Bildirme Süreci
 
-1. Güvenlik açığını [info@medalarm.com](mailto:info@medalarm.com) adresine e-posta gönderin
+1. Güvenlik açığını [kaaanyildz@gmail.com](kaaanyildz@gmail.com) adresine e-posta gönderin
 2. Bildiriminizin alındığına dair bir onay alacaksınız
 3. Ekibimiz açığı değerlendirecek ve durumunuz hakkında sizi bilgilendirecektir
 4. Açığın geçerliliği doğrulandığında, hızla düzeltilecek ve bir güvenlik güncellemesi yayınlanacaktır
@@ -27,4 +27,4 @@ Bildiriminiz için teşekkür ederiz!
 
 ## İletişim
 
-Güvenlik ile ilgili konularda [info@medalarm.com](mailto:info@medalarm.com) adresinden bizimle iletişime geçebilirsiniz.
+Güvenlik ile ilgili konularda [kaaanyildz@gmail.com](kaaanyildz@gmail.com) adresinden bizimle iletişime geçebilirsiniz.

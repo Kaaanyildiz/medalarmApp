@@ -1,8 +1,8 @@
-# MedAlarm <img src="assets/images/placeholder.png" alt="MedAlarm Logo" width="30">
+# MedAlarm <img src="https://github.com/user-attachments/assets/17cf99c4-fdc5-4f93-8a30-d96c4d626714" alt="MedAlarm Logo" width="30">
 
 <div align="center">
   <h1>💊 İlaç Takip ve Hatırlatma Asistanınız 💊</h1>
-  <img src="assets/images/placeholder.png" alt="MedAlarm Logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+  <img src="https://github.com/user-attachments/assets/17cf99c4-fdc5-4f93-8a30-d96c4d626714" alt="MedAlarm Logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
   
   [![Flutter Version](https://img.shields.io/badge/Flutter-3.7.0+-02569B?logo=flutter&logoColor=white&style=for-the-badge)](https://flutter.dev)
   [![Dart Version](https://img.shields.io/badge/Dart-3.0.0+-0175C2?logo=dart&logoColor=white&style=for-the-badge)](https://dart.dev)
@@ -122,7 +122,7 @@ MedAlarm, ilaç tedavinizi **kusursuz bir şekilde** yönetmenize yardımcı ola
 
 ```bash
 # Projeyi bilgisayarınıza indirin
-git clone https://github.com/yourusername/medalarmm.git
+git clone https://github.com/Kaaanyildiz/medalarmm.git
 
 # Proje klasörüne gidin
 cd medalarmm
@@ -219,15 +219,14 @@ MedAlarm'ın gelişimine katkıda bulunmak ister misiniz? Sağlık teknolojileri
 ## 📞 İletişim
 
 <div align="center">
-  <a href="mailto:info@medalarm.com"><img src="https://img.shields.io/badge/Email-info%40medalarm.com-red?style=for-the-badge&logo=gmail"></a>
-  <a href="https://twitter.com/medalarm"><img src="https://img.shields.io/badge/Twitter-%40medalarm-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white"></a>
-  <a href="https://www.linkedin.com/company/medalarm"><img src="https://img.shields.io/badge/LinkedIn-medalarm-0077B5?style=for-the-badge&logo=linkedin"></a>
+  <a href="mailto:kaaanyildz@gmail.com"><img src="https://img.shields.io/badge/Email-kaaanyildz%40gmail.com-red?style=for-the-badge&logo=gmail"></a>
+  <a href="www.linkedin.com/in/kaanyıldız1"><img src="https://img.shields.io/badge/LinkedIn-kaanyıldız1-0077B5?style=for-the-badge&logo=linkedin"></a>
 </div>
 
 ---
 
 <div align="center">
-  <img src="assets/images/placeholder.png" alt="MedAlarm Icon" width="60">
+  <img src="https://github.com/user-attachments/assets/17cf99c4-fdc5-4f93-8a30-d96c4d626714" alt="MedAlarm Icon" width="60">
   <h3>Sağlığınızı MedAlarm'a emanet edin!</h3>
   <p><i>Çünkü sağlığınız, bizim önceliğimiz.</i></p>
   <p>MedAlarm, ❤️ ve ☕ ile Türkiye'de geliştirilmiştir | © 2025</p>
