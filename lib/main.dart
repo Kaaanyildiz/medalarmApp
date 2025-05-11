@@ -3,23 +3,28 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:medalarmm/features/onboarding/providers/theme_provider.dart';
+import 'package:medalarmm/features/onboarding/providers/locale_provider.dart';
 import 'package:medalarmm/features/profile/providers/user_profile_provider.dart';
 import 'package:medalarmm/features/medications/screens/add_medication_screen.dart';
 import 'package:medalarmm/features/calendar/screens/calendar_screen.dart';
 import 'package:medalarmm/features/medications/screens/inventory_screen.dart';
 import 'package:medalarmm/features/medications/screens/medication_list_screen.dart';
 import 'package:medalarmm/features/profile/screens/profile_screen.dart';
+import 'package:medalarmm/features/profile/screens/language_settings_screen.dart';
 import 'package:medalarmm/features/reports/screens/reports_screen.dart';
 import 'package:medalarmm/features/onboarding/screens/splash_screen.dart';
 import 'package:medalarmm/core/services/database_service.dart';
 import 'package:medalarmm/core/services/notification_service.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Yerelleştirme verilerini başlat
   await initializeDateFormatting('tr_TR', null);
+  await initializeDateFormatting('en_US', null);
   
   // Servislerin başlatılması
   final databaseService = DatabaseService();
@@ -41,16 +46,30 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
         ChangeNotifierProvider(create: (_) => UserProfileProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+      child: Consumer2<ThemeProvider, LocaleProvider>(
+        builder: (context, themeProvider, localeProvider, _) {
           // Tema durumunu AppColorScheme'e aktar
           AppColorScheme.isDarkMode = themeProvider.isDarkMode;
-            return MaterialApp(            title: 'MedAlarm',
+            return MaterialApp(            
+            title: 'MedAlarm',
             debugShowCheckedModeBanner: false,
             theme: _getThemeData(isDark: false),
             darkTheme: _getThemeData(isDark: true),
             themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            
+            // Çoklu dil desteği
+            locale: localeProvider.locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            localeResolutionCallback: AppLocalizations.localeResolutionCallback,
+            
             home: const SplashScreen(),
             // Rota tanımlamaları 
             routes: {
@@ -60,6 +79,7 @@ class MyApp extends StatelessWidget {
               '/reports': (context) => const ReportsScreen(),
               '/profile': (context) => const ProfileScreen(),
               '/inventory': (context) => const InventoryScreen(),
+              '/language_settings': (context) => const LanguageSettingsScreen(),
               // Detail ekranı için parametre gerekiyor, onNavigator.push ile kullanılacak
             },
           );

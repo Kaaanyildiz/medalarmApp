@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 
 /// Uygulama renkleri
 class AppColors {
@@ -235,17 +236,11 @@ class AppConstants {
     'saturday',
     'sunday',
   ];
-  
-  // Gün isimleri
-  static const Map<String, String> weekDaysMap = {
-    'monday': 'Pazartesi',
-    'tuesday': 'Salı',
-    'wednesday': 'Çarşamba',
-    'thursday': 'Perşembe',
-    'friday': 'Cuma',
-    'saturday': 'Cumartesi',
-    'sunday': 'Pazar',
-  };
+    // Get localized day name
+  static String getLocalizedDayName(BuildContext context, String dayKey) {
+    final loc = AppLocalizations.of(context);
+    return loc.translate(dayKey);
+  }
   
   // Uygulama adı
   static const appName = 'MedAlarm';

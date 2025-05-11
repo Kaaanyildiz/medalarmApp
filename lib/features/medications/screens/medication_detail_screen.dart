@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/features/medications/models/medication.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:medalarmm/features/medications/screens/add_medication_screen.dart';
@@ -45,9 +46,10 @@ class _MedicationDetailScreenState extends State<MedicationDetailScreen> {
     }
   }  @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('İlaç Detayları'),
+        title: Text(loc.translate('medication_details')),
         actions: [          
           // Edit icon kaldırıldı, düzenleme artık ilaç kartındaki düzenle butonu ile yapılacak
         ],

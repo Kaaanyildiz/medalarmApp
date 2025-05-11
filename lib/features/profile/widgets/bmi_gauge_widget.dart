@@ -11,44 +11,38 @@ class BMIGaugeWidget extends StatelessWidget {
   }) : super(key: key);
   
   @override
-  Widget build(BuildContext context) {
-    // BMI durumları
+  Widget build(BuildContext context) {    // BMI thresholds
     const double underweightThreshold = 18.5;
     const double normalThreshold = 25.0;
     const double overweightThreshold = 30.0;
     
-    // Renk ve durum ayarlamaları
+    // Color and status settings
     Color gaugeColor;
     String statusText;
     String descriptionText;
     double progress;
-    
-    if (bmi < underweightThreshold) {
+      if (bmi < underweightThreshold) {
       gaugeColor = Colors.blue;
-      statusText = 'Zayıf';
-      descriptionText = 'Beslenmenizi çeşitlendirmelisiniz';
-      progress = bmi / underweightThreshold;
-    } else if (bmi < normalThreshold) {
+      statusText = 'Underweight';
+      descriptionText = 'You should diversify your nutrition';
+      progress = bmi / underweightThreshold;    } else if (bmi < normalThreshold) {
       gaugeColor = AppColors.success;
       statusText = 'Normal';
-      descriptionText = 'İdeal kilonuzdasınız, böyle devam edin';
-      // 0.33-0.66 arası bir değer hesapla
-      progress = 0.33 + ((bmi - underweightThreshold) / (normalThreshold - underweightThreshold)) * 0.33;
-    } else if (bmi < overweightThreshold) {
+      descriptionText = 'You are at your ideal weight, keep it up';
+      // Calculate a value between 0.33-0.66
+      progress = 0.33 + ((bmi - underweightThreshold) / (normalThreshold - underweightThreshold)) * 0.33;    } else if (bmi < overweightThreshold) {
       gaugeColor = AppColors.warning;
-      statusText = 'Fazla Kilolu';
-      descriptionText = 'Daha fazla hareket etmelisiniz';
-      // 0.66-0.85 arası bir değer hesapla
-      progress = 0.66 + ((bmi - normalThreshold) / (overweightThreshold - normalThreshold)) * 0.19;
-    } else {
+      statusText = 'Overweight';
+      descriptionText = 'You should exercise more';
+      // Calculate a value between 0.66-0.85
+      progress = 0.66 + ((bmi - normalThreshold) / (overweightThreshold - normalThreshold)) * 0.19;    } else {
       gaugeColor = AppColors.error;
-      statusText = 'Obez';
-      descriptionText = 'Sağlığınız için kilo vermelisiniz';
-      // 0.85-1.0 arası bir değer hesapla
+      statusText = 'Obese';
+      descriptionText = 'You should lose weight for your health';
+      // Calculate a value between 0.85-1.0
       progress = 0.85 + min((bmi - overweightThreshold) / 10.0, 0.15);
     }
-    
-    // Progress değerini 0.0-1.0 arasında sınırla
+      // Limit progress value to between 0.0-1.0
     progress = progress.clamp(0.0, 1.0);
     
     return Card(
@@ -61,13 +55,12 @@ class BMIGaugeWidget extends StatelessWidget {
         padding: const EdgeInsets.all(AppDimens.paddingM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // BMI başlık ve değeri
+          children: [            // BMI title and value
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Vücut Kitle İndeksi (VKİ)',
+                  'Body Mass Index (BMI)',
                   style: AppTextStyles.heading3,
                 ),
                 Container(
@@ -93,9 +86,8 @@ class BMIGaugeWidget extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: AppDimens.paddingS),
-              // BMI Gauge göstergesi
+            ),            const SizedBox(height: AppDimens.paddingS),
+              // BMI Gauge indicator
             Container(
               height: 30,
               width: double.infinity,
@@ -111,8 +103,7 @@ class BMIGaugeWidget extends StatelessWidget {
                 ],
               ),
               child: Row(
-                children: [
-                  // Zayıf bölgesi
+                children: [                  // Underweight region
                   Expanded(
                     flex: 2,
                     child: Container(
@@ -125,21 +116,20 @@ class BMIGaugeWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Normal bölgesi
+                  // Normal region
                   Expanded(
                     flex: 3,
                     child: Container(
-                      color: AppColors.success.withOpacity(0.5),
-                    ),
+                      color: AppColors.success.withOpacity(0.5),                    ),
                   ),
-                  // Fazla kilolu bölgesi
+                  // Overweight region
                   Expanded(
                     flex: 2,
                     child: Container(
                       color: AppColors.warning.withOpacity(0.5),
                     ),
                   ),
-                  // Obez bölgesi
+                  // Obese region
                   Expanded(
                     flex: 3,
                     child: Container(
@@ -152,10 +142,9 @@ class BMIGaugeWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                ],
-              ),
+                ],              ),
             ),
-              // BMI imleci
+              // BMI cursor
             Container(
               width: double.infinity,
               padding: EdgeInsets.only(
@@ -169,11 +158,10 @@ class BMIGaugeWidget extends StatelessWidget {
                     color: gaugeColor,
                     size: 32,
                   ),
-                ],
-              ),
+                ],              ),
             ),
             
-            // BMI durum bilgisi
+            // BMI status information
             Container(
               margin: const EdgeInsets.symmetric(vertical: AppDimens.paddingM),
               padding: const EdgeInsets.all(AppDimens.paddingM),
@@ -213,36 +201,34 @@ class BMIGaugeWidget extends StatelessWidget {
                       ],
                     ),
                   ),
-                ],
-              ),
+                ],              ),
             ),
             
-            // BMI göstergesinin açıklamaları
+            // BMI gauge descriptions
             const SizedBox(height: AppDimens.paddingS),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildBMILabel('Zayıf', '<18.5', Colors.blue),
+                _buildBMILabel('Underweight', '<18.5', Colors.blue),
                 _buildBMILabel('Normal', '18.5-25', AppColors.success),
-                _buildBMILabel('Fazla Kilolu', '25-30', AppColors.warning),
-                _buildBMILabel('Obez', '>30', AppColors.error),
+                _buildBMILabel('Overweight', '25-30', AppColors.warning),
+                _buildBMILabel('Obese', '>30', AppColors.error),
               ],
             ),
           ],
         ),
       ),
     );
-  }
-  
+  }  
   IconData _getStatusIcon(String status) {
     switch (status) {
-      case 'Zayıf':
+      case 'Underweight':
         return Icons.sentiment_dissatisfied;
       case 'Normal':
         return Icons.sentiment_very_satisfied;
-      case 'Fazla Kilolu':
+      case 'Overweight':
         return Icons.sentiment_neutral;
-      case 'Obez':
+      case 'Obese':
         return Icons.sentiment_very_dissatisfied;
       default:
         return Icons.info_outline;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/features/medications/models/medication.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:provider/provider.dart';
@@ -26,10 +27,9 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   final TextEditingController _stockThresholdController = TextEditingController();
   final TextEditingController _stockUnitController = TextEditingController();
   final TextEditingController _durationDaysController = TextEditingController();
-  
-  bool _isEditing = false;
+    bool _isEditing = false;
   String? _medicationId;
-  String _selectedMedicationType = 'Hap';
+  String _selectedMedicationType = 'med_type_pill';
   MedicationFrequency _frequency = MedicationFrequency.daily;
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
@@ -40,16 +40,15 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   bool _isActive = true;
   final List<TimeOfDay> _times = [const TimeOfDay(hour: 8, minute: 0)];
   final List<DayOfWeek> _selectedDays = [];
-  
-  final List<String> _medicationTypes = [
-    'Hap',
-    'Şurup',
-    'İğne',
-    'Damla',
-    'Sprey',
-    'Merhem',
-    'Krem',
-    'Diğer',
+    final List<String> _medicationTypes = [
+    'med_type_pill',
+    'med_type_syrup',
+    'med_type_injection',
+    'med_type_drops',
+    'med_type_spray',
+    'med_type_ointment',
+    'med_type_cream',
+    'med_type_other',
   ];
 
   @override
@@ -77,7 +76,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     _instructionsController.text = med.instructions ?? '';
     _notesController.text = med.notes ?? '';
     
-    _selectedMedicationType = med.medicationType ?? 'Hap';
+    _selectedMedicationType = med.medicationType ?? 'med_type_pill';
     _frequency = med.frequency;
     _startDate = med.startDate ?? DateTime.now();
     _endDate = med.endDate;
@@ -122,13 +121,14 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     _stockUnitController.dispose();
     _durationDaysController.dispose();
     super.dispose();
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'İlaç Düzenle' : 'Yeni İlaç Ekle'),
+        title: Text(_isEditing 
+          ? '${loc.translate('edit')} ${loc.translate('medication')}' 
+          : loc.translate('add_medication')),
       ),
       body: Form(
         key: _formKey,
@@ -152,27 +152,27 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       ),
     );
   }
-
   Widget _buildBasicInfo() {
+    final loc = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Temel Bilgiler',
+          loc.translate('basic_info'),
           style: AppTextStyles.heading2,
         ),
         const SizedBox(height: AppDimens.paddingM),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: 'İlaç Adı *',
-            hintText: 'Örn: Parol, Aspirin',
-            prefixIcon: Icon(Icons.medication),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: loc.translate('medication_name_required'),
+            hintText: loc.translate('medication_name_hint'),
+            prefixIcon: const Icon(Icons.medication),
+            border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'İlaç adı zorunludur';
+              return loc.translate('please_enter_name');
             }
             return null;
           },
@@ -183,11 +183,11 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
             Expanded(
               child: TextFormField(
                 controller: _dosageController,
-                decoration: const InputDecoration(
-                  labelText: 'Dozaj',
-                  hintText: 'Örn: 500mg, 1 tablet',
-                  prefixIcon: Icon(Icons.scale),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('dosage'),
+                  hintText: loc.translate('dosage_hint'),
+                  prefixIcon: const Icon(Icons.scale),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
@@ -195,15 +195,15 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _selectedMedicationType,
-                decoration: const InputDecoration(
-                  labelText: 'İlaç Tipi',
-                  prefixIcon: Icon(Icons.category),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('medication_type'),
+                  prefixIcon: const Icon(Icons.category),
+                  border: const OutlineInputBorder(),
                 ),
                 items: _medicationTypes.map((type) {
                   return DropdownMenuItem<String>(
                     value: type,
-                    child: Text(type),
+                    child: Text(loc.translate(type)),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -220,48 +220,48 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         const SizedBox(height: AppDimens.paddingM),
         TextFormField(
           controller: _instructionsController,
-          decoration: const InputDecoration(
-            labelText: 'Kullanım Talimatları',
-            hintText: 'Örn: Yemeklerden sonra, aç karnına',
-            prefixIcon: Icon(Icons.info_outline),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: loc.translate('usage_instructions'),
+            hintText: loc.translate('usage_instructions_hint'),
+            prefixIcon: const Icon(Icons.info_outline),
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
     );
   }
-
   Widget _buildScheduleInfo() {
+    final loc = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kullanım Programı',
+          loc.translate('usage_schedule'),
           style: AppTextStyles.heading2,
         ),
         const SizedBox(height: AppDimens.paddingM),
         // Kullanım sıklığı
         DropdownButtonFormField<MedicationFrequency>(
           value: _frequency,
-          decoration: const InputDecoration(
-            labelText: 'Kullanım Sıklığı',
-            prefixIcon: Icon(Icons.repeat),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: loc.translate('usage_frequency'),
+            prefixIcon: const Icon(Icons.repeat),
+            border: const OutlineInputBorder(),
           ),
           items: MedicationFrequency.values.map((freq) {
             String label = '';
             switch (freq) {
               case MedicationFrequency.daily:
-                label = 'Her gün';
+                label = loc.translate('every_day');
                 break;
               case MedicationFrequency.specificDays:
-                label = 'Belirli günler';
+                label = loc.translate('specific_days');
                 break;
               case MedicationFrequency.asNeeded:
-                label = 'Gerektiğinde';
+                label = loc.translate('when_needed');
                 break;
               case MedicationFrequency.cyclical:
-                label = 'Döngüsel';
+                label = loc.translate('cyclical');
                 break;
             }
             return DropdownMenuItem<MedicationFrequency>(
@@ -280,8 +280,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
               });
             }
           },
-        ),
-        const SizedBox(height: AppDimens.paddingM),
+        ),        const SizedBox(height: AppDimens.paddingM),
         
         // Belirli günler seçimi
         if (_frequency == MedicationFrequency.specificDays)
@@ -294,7 +293,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
           children: [
             Expanded(
               child: ListTile(
-                title: const Text('Başlangıç Tarihi'),
+                title: Text(loc.translate('start_date')),
                 subtitle: Text(DateFormat('dd.MM.yyyy').format(_startDate)),
                 onTap: () async {
                   final DateTime? picked = await showDatePicker(
@@ -320,7 +319,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: const Text('Bitiş Tarihi'),
+                    title: Text(loc.translate('has_end_date')),
                     value: _hasEndDate,
                     onChanged: (bool value) {
                       setState(() {
@@ -332,8 +331,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                         }
                       });
                     },
-                  ),
-                  if (_hasEndDate)
+                  ),                  if (_hasEndDate)
                     ListTile(
                       title: Text(
                         DateFormat('dd.MM.yyyy').format(_endDate ?? _startDate.add(const Duration(days: 30))),
@@ -365,11 +363,11 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         if (!_hasEndDate)
           TextFormField(
             controller: _durationDaysController,
-            decoration: const InputDecoration(
-              labelText: 'Kullanım Süresi (Gün)',
-              hintText: 'Kaç gün kullanılacak',
-              prefixIcon: Icon(Icons.hourglass_empty),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: loc.translate('duration_days'),
+              hintText: loc.translate('duration_days'),
+              prefixIcon: const Icon(Icons.hourglass_empty),
+              border: const OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -383,15 +381,15 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
             Expanded(
               child: DropdownButtonFormField<int>(
                 value: _timesPerDay,
-                decoration: const InputDecoration(
-                  labelText: 'Günde Kaç Kez',
-                  prefixIcon: Icon(Icons.access_time),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('times_per_day'),
+                  prefixIcon: const Icon(Icons.access_time),
+                  border: const OutlineInputBorder(),
                 ),
                 items: List.generate(10, (index) => index + 1).map((count) {
                   return DropdownMenuItem<int>(
                     value: count,
-                    child: Text('$count kez'),
+                    child: Text('$count ${loc.translate('times')}'),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -421,15 +419,15 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
             Expanded(
               child: DropdownButtonFormField<int>(
                 value: _dosesPerTime,
-                decoration: const InputDecoration(
-                  labelText: 'Her Seferde',
-                  prefixIcon: Icon(Icons.line_weight),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('dose_per_time'),
+                  prefixIcon: const Icon(Icons.line_weight),
+                  border: const OutlineInputBorder(),
                 ),
                 items: List.generate(10, (index) => index + 1).map((count) {
                   return DropdownMenuItem<int>(
                     value: count,
-                    child: Text('$count doz'),
+                    child: Text('$count ${loc.translate('dose')}'),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -448,7 +446,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         
         // İlaç saatleri
         Text(
-          'İlaç Saatleri',
+          loc.translate('times_of_day'),
           style: AppTextStyles.heading3,
         ),
         const SizedBox(height: AppDimens.paddingS),

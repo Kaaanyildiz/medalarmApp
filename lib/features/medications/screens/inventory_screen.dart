@@ -6,6 +6,7 @@ import 'package:medalarmm/features/medications/providers/medication_provider.dar
 import 'package:medalarmm/common/widgets/empty_state.dart';
 import 'package:medalarmm/common/widgets/loading_indicator.dart';
 import 'package:medalarmm/features/medications/widgets/stock_update_dialog.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -32,8 +33,7 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
     _tabController.dispose();
     super.dispose();
   }
-  
-  Future<void> _loadMedications() async {
+    Future<void> _loadMedications() async {
     setState(() {
       _isLoading = true;
     });
@@ -43,7 +43,7 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
       final provider = Provider.of<MedicationProvider>(context, listen: false);
       await provider.loadMedications();
     } catch (e) {
-      print('İlaçlar yüklenirken hata: $e');
+      print('Error loading medications: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -51,17 +51,17 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
         });
       }
     }
-  }
-  @override
+  }@override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
-        title: const Text(
-          'İlaç Stok Takibi',
-          style: TextStyle(
+        title: Text(
+          loc.translate('medication_inventory'),
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -73,7 +73,7 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
               color: Colors.white,
             ),
             onPressed: _loadMedications,
-            tooltip: 'Yenile',
+            tooltip: loc.translate('refresh'),
           ),
         ],
         bottom: TabBar(
@@ -88,18 +88,18 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
           unselectedLabelStyle: AppTextStyles.bodyText.copyWith(
             fontSize: 14,
           ),
-          tabs: const [
+          tabs: [
             Tab(
-              text: 'Tüm İlaçlar',
-              icon: Icon(Icons.medication_rounded),
+              text: loc.translate('all_medications'),
+              icon: const Icon(Icons.medication_rounded),
             ),
             Tab(
-              text: 'Az Kalan',
-              icon: Icon(Icons.warning_amber_rounded),
+              text: loc.translate('low_stock'),
+              icon: const Icon(Icons.warning_amber_rounded),
             ),
             Tab(
-              text: 'Biten',
-              icon: Icon(Icons.error_outline),
+              text: loc.translate('out_of_stock'),
+              icon: const Icon(Icons.error_outline),
             ),
           ],
         ),
@@ -109,12 +109,11 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
           : Consumer<MedicationProvider>(
               builder: (context, provider, child) {
                 final medications = provider.medications;
-                
-                if (medications.isEmpty) {
-                  return const EmptyState(
+                  if (medications.isEmpty) {
+                  return EmptyState(
                     icon: Icons.medication_outlined,
-                    title: 'Henüz İlaç Eklenmemiş',
-                    message: 'Stok takibi için ilaçlarınızı ekleyin.',
+                    title: loc.translate('no_medications_added'),
+                    message: loc.translate('add_medications_prompt'),
                   );
                 }
                 
@@ -138,33 +137,30 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
                   children: [
                     // Tüm İlaçlar sekmesi
                     _buildMedicationList(medications),
-                    
-                    // Az Kalan sekmesi
+                      // Az Kalan sekmesi
                     lowStockMedications.isEmpty
-                        ? const EmptyState(
+                        ? EmptyState(
                             icon: Icons.check_circle_outline,
-                            title: 'Stok Durumu İyi',
-                            message: 'Şu anda stok seviyesi düşük olan ilaç bulunmuyor.',
+                            title: loc.translate('stock_status_good'),
+                            message: loc.translate('no_low_stock'),
                           )
                         : _buildMedicationList(lowStockMedications),
-                    
-                    // Biten sekmesi
+                      // Biten sekmesi
                     outOfStockMedications.isEmpty
-                        ? const EmptyState(
+                        ? EmptyState(
                             icon: Icons.inventory_2_outlined,
-                            title: 'Stok Tamam',
-                            message: 'Şu anda stoku biten ilaç bulunmuyor.',
+                            title: loc.translate('stock_complete'),
+                            message: loc.translate('no_out_of_stock'),
                           )
                         : _buildMedicationList(outOfStockMedications),
                   ],
                 );
               },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
+      ),      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showUpdateStockDialog,
-        tooltip: 'İlaç Stoku Güncelle',
+        tooltip: loc.translate('update_stock'),
         icon: const Icon(Icons.add_shopping_cart),
-        label: const Text('Stok Güncelle'),
+        label: Text(loc.translate('update_stock')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 4,
@@ -173,8 +169,8 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
         ),
       ),
     );
-  }
-    Widget _buildMedicationList(List<Medication> medications) {
+  }    Widget _buildMedicationList(List<Medication> medications) {
+    final loc = AppLocalizations.of(context);
     return ListView.builder(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimens.paddingM,
@@ -190,9 +186,8 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
               bottom: AppDimens.paddingM,
             ),
             child: Row(
-              children: [
-                Text(
-                  'İlaçlar (${medications.length})',
+              children: [                Text(
+                  loc.translate('medications_count').replaceAll('{count}', medications.length.toString()),
                   style: AppTextStyles.heading3.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -216,9 +211,8 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
                         size: AppDimens.iconSizeS,
                         color: AppColors.primary,
                       ),
-                      const SizedBox(width: AppDimens.paddingS),
-                      Text(
-                        'Sırala',
+                      const SizedBox(width: AppDimens.paddingS),                      Text(
+                        loc.translate('sort_by'),
                         style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -260,29 +254,30 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
       stockColor = AppColors.success;
       stockIcon = Icons.check_circle_outline;
     }
-    
-    // Stok metni
+      // Stok metni
     String stockText;
+    final loc = AppLocalizations.of(context);
     if (!hasStock) {
-      stockText = 'Stok bilgisi yok';
+      stockText = loc.translate('no_stock_info');
     } else if (stock <= 0) {
-      stockText = 'Stok tükendi!';
+      stockText = loc.translate('stock_depleted');
     } else {
-      stockText = '$stock ${medication.stockUnit ?? 'adet'} kaldı';
+      stockText = '$stock ${medication.stockUnit ?? loc.translate('units')} ${loc.translate('remaining')}';
       if (daysLeft != null) {
-        stockText += ' (yaklaşık $daysLeft gün)';
+        stockText += ' (${loc.translate('approx')} $daysLeft ${loc.translate('days')})';
       }
     }
-    
-    // Son yenileme tarihi
-    String lastRefillText = 'Son stok girişi yok';
+      // Son yenileme tarihi
+    String lastRefillText = loc.translate('no_last_refill');
     if (medication.lastRefillDate != null) {
-      final dateFormat = DateFormat('dd/MM/yyyy', 'tr_TR');
-      lastRefillText = 'Son stok: ${dateFormat.format(medication.lastRefillDate!)}';
+      final dateFormat = DateFormat('dd/MM/yyyy');
+      lastRefillText = '${loc.translate('last_refill')}: ${dateFormat.format(medication.lastRefillDate!)}';
     }
     
     // İlaç alım zamanı formatı
-    final dosageText = 'Günde ${medication.timesPerDay ?? 0} kez, her seferde ${medication.dosesPerTime ?? 1} doz';
+    final dosageText = '${loc.translate('times_per_day_format')
+        .replaceAll('{times}', (medication.timesPerDay ?? 0).toString())
+        .replaceAll('{doses}', (medication.dosesPerTime ?? 1).toString())}';
     
     return Card(
       margin: const EdgeInsets.only(bottom: AppDimens.paddingM),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/features/medications/models/medication.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:medalarmm/features/medications/screens/add_medication_screen.dart';
@@ -18,19 +19,27 @@ class MedicationListScreen extends StatefulWidget {
 }
 
 class _MedicationListScreenState extends State<MedicationListScreen> {
+  late AppLocalizations loc;
+
   @override
   void initState() {
     super.initState();
-    // Uygulama açıldığında ilaç verilerini yükle
+    // Load medication data when app opens
     _refreshData();
   }
-
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    loc = AppLocalizations.of(context);
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'İlaçlarım',
+          loc.translate('medications'),
           style: AppTextStyles.heading2.copyWith(
             color: AppColors.textPrimary,
           ),
@@ -41,12 +50,12 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Verileri Yenile',
+            tooltip: loc.translate('refresh_data'),
             onPressed: () {
               _refreshData();
               NotificationWidget.showSnackBar(
                 context: context,
-                message: 'İlaç verileri yenilendi',
+                message: loc.translate('medications_refreshed'),
                 type: NotificationType.info,
               );
             },
@@ -54,12 +63,9 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
         ],
       ),
       body: Consumer<MedicationProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const LoadingIndicator(message: 'İlaçlar yükleniyor...');
-          }
-
-          // MedicationList widget'ını kullan
+        builder: (context, provider, child) {          if (provider.isLoading) {
+            return LoadingIndicator(message: loc.translate('loading') + '...');
+          }          // Use MedicationList widget
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppDimens.paddingM),
             child: Column(
@@ -67,24 +73,23 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
               children: [
                 const SizedBox(height: AppDimens.paddingS),
                 Text(
-                  'İlaçlarınız',
+                  loc.translate('medications'),
                   style: AppTextStyles.heading2,
                 ),
                 const SizedBox(height: AppDimens.paddingXS),
                 Text(
-                  'Tüm ilaçlarınızı buradan yönetebilirsiniz',
+                  loc.translate('add_medications_prompt'),
                   style: AppTextStyles.bodyTextSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppDimens.paddingM),
-                Expanded(
+                const SizedBox(height: AppDimens.paddingM),                Expanded(
                   child: MedicationList(
                     medications: provider.medications,
                     showEmpty: true,
-                    emptyTitle: 'Henüz İlaç Eklenmemiş',
-                    emptyMessage: 'İlaçlarınızı eklemek için aşağıdaki butona tıklayın.',
-                    emptyActionText: 'İlaç Ekle',
+                    emptyTitle: loc.translate('no_medications'),
+                    emptyMessage: loc.translate('add_medications_prompt'),
+                    emptyActionText: loc.translate('add_medication'),
                     onEmptyActionPressed: _navigateToAddMedication,
                     onRefresh: _refreshData,
                     onMedicationTap: _navigateToMedicationDetail,
@@ -94,22 +99,20 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
             ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
+      ),      floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddMedication,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.add),
-        label: const Text('Yeni İlaç'),
+        label: Text(loc.translate('add_medication')),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimens.radiusL),
         ),
       ),
     );
   }
-
-  // İlaç kartını oluştur
+  // Create medication card
   Widget _buildMedicationCard(Medication medication, MedicationProvider provider) {
     final adherencePercentage = provider.getMedicationAdherencePercentage(medication.id);
     final missedDosesCount = provider.getMissedDosesCount(medication.id);
@@ -144,9 +147,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                       topRight: Radius.circular(AppDimens.radiusM),
                       bottomLeft: Radius.circular(AppDimens.radiusS),
                     ),
-                  ),
-                  child: Text(
-                    'Pasif',
+                  ),                  child: Text(
+                    loc.translate('inactive'),
                     style: AppTextStyles.captionBold.copyWith(
                       color: Colors.white,
                     ),
@@ -171,9 +173,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                             color: _getProgressColor(adherencePercentage),
                             fontWeight: FontWeight.w700,
                           ),
-                        ),
-                        Text(
-                          'uyum',
+                        ),                        Text(
+                          loc.translate('adherence'),
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.textLight,
                           ),
@@ -213,9 +214,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                                     ? AppColors.success.withAlpha(26)
                                     : AppColors.error.withAlpha(26),
                                 borderRadius: BorderRadius.circular(AppDimens.radiusS),
-                              ),
-                              child: Text(
-                                medication.isActive ? 'Aktif' : 'Pasif',
+                              ),                              child: Text(
+                                medication.isActive ? loc.translate('active') : loc.translate('inactive'),
                                 style: AppTextStyles.captionBold.copyWith(
                                   color: medication.isActive
                                       ? AppColors.success
@@ -234,9 +234,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.primaryLight.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(AppDimens.radiusS),
-                          ),
-                          child: Text(
-                            'Dozaj: ${medication.dosage}',
+                          ),                          child: Text(
+                            '${loc.translate('dosage')}: ${medication.dosage}',
                             style: AppTextStyles.bodyTextSmall.copyWith(
                               color: AppColors.primaryDark,
                               fontWeight: FontWeight.w500,
@@ -277,9 +276,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                                   size: 14,
                                   color: AppColors.error,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$missedDosesCount doz alınmadı',
+                                const SizedBox(width: 4),                                Text(
+                                  '$missedDosesCount ${loc.translate('missed_doses')}',
                                   style: AppTextStyles.captionBold.copyWith(
                                     color: AppColors.error,
                                   ),
@@ -297,9 +295,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                                 size: AppDimens.iconSizeS,
                                 color: AppColors.textSecondary,
                               ),
-                              const SizedBox(width: AppDimens.paddingXS),
-                              Text(
-                                'Stok: ${medication.currentStock} adet',
+                              const SizedBox(width: AppDimens.paddingXS),                              Text(
+                                '${loc.translate('stock')}: ${medication.currentStock} ${loc.translate('inventory_units_count')}',
                                 style: AppTextStyles.bodyTextSmall.copyWith(
                                   color: medication.stockThreshold != null && 
                                         medication.currentStock! < medication.stockThreshold!
@@ -325,8 +322,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
       ),
     );
   }
-
-  // İlerleme çubuğu rengi
+  // Progress bar color
   Color _getProgressColor(double percentage) {
     if (percentage >= 80) {
       return AppColors.success;
@@ -336,11 +332,10 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
       return AppColors.error;
     }
   }
-
-  // Günleri formatla
+  // Format days
   String _formatDays(List<DayOfWeek> days) {
     if (days.length == 7) {
-      return 'Her gün';
+      return loc.translate('daily');
     }
     
     List<String> formattedDays = days.map((dayEnum) {
@@ -352,18 +347,16 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     if (formattedDays.length <= 3) {
       return formattedDays.join(', ');
     } else {
-      return '${formattedDays.length} gün';
+      return '${formattedDays.length} ${loc.translate('days')}';
     }
   }
-
-  // Veriyi yenile
+  // Refresh data
   Future<void> _refreshData() async {
     final provider = Provider.of<MedicationProvider>(context, listen: false);
     await provider.loadMedications();
     await provider.loadMedicationLogs();
   }
-
-  // İlaç ekleme ekranına git
+  // Navigate to add medication screen
   void _navigateToAddMedication() {
     Navigator.push(
       context,
@@ -372,8 +365,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
       ),
     ).then((_) => _refreshData());
   }
-
-  // İlaç detay ekranına git
+  // Navigate to medication detail screen
   void _navigateToMedicationDetail(Medication medication) {
     Navigator.push(
       context,

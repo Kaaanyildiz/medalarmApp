@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/core/models/user_profile.dart';
 import 'package:medalarmm/features/notifications/models/notification_settings.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:medalarmm/features/profile/providers/user_profile_provider.dart';
 import 'package:medalarmm/features/profile/widgets/bmi_gauge_widget.dart';
+import 'package:medalarmm/features/onboarding/providers/locale_provider.dart';
 import 'package:medalarmm/common/widgets/loading_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -50,36 +51,85 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       _medicalConditionController.text = provider.userProfile!.medicalCondition ?? '';
       _notesController.text = provider.userProfile!.notes ?? '';
     }
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-      ),
-      body: Consumer<UserProfileProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const LoadingIndicator();
-          }
+    final loc = AppLocalizations.of(context);
+      return DefaultTabController(
+      length: 3, // Three tabs: Personal Info, Health Summary, Settings
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(loc.translate('profile')),
+          bottom: TabBar(
+            tabs: [
+              Tab(
+                icon: const Icon(Icons.person),
+                text: loc.translate('personal_info'),
+              ),
+              Tab(
+                icon: const Icon(Icons.favorite),
+                text: loc.translate('health_summary'),
+              ),
+              Tab(
+                icon: const Icon(Icons.settings),
+                text: loc.translate('settings'),
+              ),
+            ],
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+          ),
+        ),
+        body: Consumer<UserProfileProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const LoadingIndicator();
+            }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimens.paddingM),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildUserProfileSection(provider),
-                const SizedBox(height: AppDimens.paddingL),
-                _buildEmergencyContactsSection(provider),
+            return TabBarView(              children: [
+                // Personal Information Tab
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppDimens.paddingM),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildProfileInfoSection(provider),
+                      const SizedBox(height: AppDimens.paddingL),
+                      _buildEmergencyContactsSection(provider),
+                    ],
+                  ),                ),
+                
+                // Health Summary Tab
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppDimens.paddingM),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHealthSummaryCard(provider),
+                    ],
+                  ),                ),
+                
+                // Settings Tab
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppDimens.paddingM),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildNotificationSettingsCard(provider),
+                      const SizedBox(height: AppDimens.paddingM),
+                      const Divider(),
+                      const SizedBox(height: AppDimens.paddingM),
+                      _buildLanguageSettingsCard(),
+                    ],
+                  ),
+                ),
               ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
-  }
-  Widget _buildUserProfileSection(UserProfileProvider provider) {
+  }Widget _buildProfileInfoSection(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
+    
     return Card(
       elevation: 4,
       shadowColor: AppColors.shadow,
@@ -119,18 +169,17 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+                    children: [                      Text(
                         provider.userProfile?.name.isNotEmpty == true
                             ? provider.userProfile!.name
-                            : 'İsim Girilmemiş',
+                            : loc.translate('name_not_entered'),
                         style: AppTextStyles.heading2,
                       ),
                       if (provider.userProfile?.age != null &&
                           (provider.userProfile!.age ?? 0) > 0) ...[
                         const SizedBox(height: AppDimens.paddingXS),
                         Text(
-                          '${provider.userProfile!.age} yaşında',
+                          loc.translate('age_years').replaceFirst('{age}', '${provider.userProfile!.age}'),
                           style: AppTextStyles.bodyTextSmall,
                         ),
                       ],
@@ -144,24 +193,11 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               ],
             ),
             
-            // Kullanıcı sağlık özeti kartı
-            const SizedBox(height: AppDimens.paddingM),
-            const Divider(),
-            const SizedBox(height: AppDimens.paddingM),
-            _buildHealthSummaryCard(provider),
-            
-            // Bildirim ve alarm ayarları kartı
-            const SizedBox(height: AppDimens.paddingM),
-            const Divider(),
-            const SizedBox(height: AppDimens.paddingM),
-            _buildNotificationSettingsCard(provider),
-            
-            if (provider.userProfile?.medicalCondition?.isNotEmpty == true) ...[
-              const SizedBox(height: AppDimens.paddingM),
+            if (provider.userProfile?.medicalCondition?.isNotEmpty == true) ...[              const SizedBox(height: AppDimens.paddingM),
               const Divider(),
               const SizedBox(height: AppDimens.paddingM),
               Text(
-                'Sağlık Durumu',
+                loc.translate('health_condition'),
                 style: AppTextStyles.heading3,
               ),
               const SizedBox(height: AppDimens.paddingS),
@@ -170,12 +206,11 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 style: AppTextStyles.bodyText,
               ),
             ],
-            if (provider.userProfile?.notes?.isNotEmpty == true) ...[
-              const SizedBox(height: AppDimens.paddingM),
+            if (provider.userProfile?.notes?.isNotEmpty == true) ...[              const SizedBox(height: AppDimens.paddingM),
               const Divider(),
               const SizedBox(height: AppDimens.paddingM),
               Text(
-                'Notlar',
+                loc.translate('notes'),
                 style: AppTextStyles.heading3,
               ),
               const SizedBox(height: AppDimens.paddingS),
@@ -188,28 +223,27 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
         ),
       ),
     );
-  }
-    // Yeni eklenen sağlık özeti kartı
+  }  // Health summary card
   Widget _buildHealthSummaryCard(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Sağlık Özeti',
+          children: [            Text(
+              loc.translate('health_summary'),
               style: AppTextStyles.heading3,
             ),
-            if (provider.userProfile?.height == null || provider.userProfile?.weight == null)
-              TextButton.icon(
+            if (provider.userProfile?.height == null || provider.userProfile?.weight == null)              TextButton.icon(
                 onPressed: () => _showEditProfileDialog(provider),
                 icon: const Icon(Icons.add_circle_outline, size: 16),
-                label: const Text('Boy/Kilo Ekle'),
+                label: Text(loc.translate('add_height_weight')),
               ),
           ],
         ),
-        const SizedBox(height: AppDimens.paddingM),          // Boy, kilo ve vücut kitle indeksi
+        const SizedBox(height: AppDimens.paddingM),        // Height, weight and body mass index
         if (provider.userProfile?.height != null && provider.userProfile?.weight != null) ...[
           Container(
             decoration: BoxDecoration(
@@ -220,34 +254,30 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
             child: Column(
               children: [
                 Row(
-                  children: [
-                    _buildHealthMetricItem(
+                  children: [                    _buildHealthMetricItem(
                       icon: Icons.height,
-                      title: 'Boy',
+                      title: loc.translate('height'),
                       value: '${provider.userProfile!.height!.toStringAsFixed(0)} cm',
                       color: AppColors.primary,
-                    ),
-                    _buildHealthMetricItem(
+                    ),                    _buildHealthMetricItem(
                       icon: Icons.monitor_weight,
-                      title: 'Kilo',
+                      title: loc.translate('weight'),
                       value: '${provider.userProfile!.weight!.toStringAsFixed(1)} kg',
                       color: AppColors.secondary,
                     ),
                   ],
                 ),
                 const SizedBox(height: AppDimens.paddingM),
-                
-                // VKİ Göstergesi
+                  // BMI indicator
                 if (provider.userProfile!.bmi != null)
                   BMIGaugeWidget(bmi: provider.userProfile!.bmi!),
                 
                 const SizedBox(height: AppDimens.paddingS),
                 Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
+                  alignment: Alignment.centerRight,                  child: TextButton.icon(
                     onPressed: () => _showEditProfileDialog(provider),
                     icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Güncelle'),
+                    label: Text(loc.translate('update')),
                   ),
                 ),
               ],
@@ -270,31 +300,28 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                   size: 40,
                   color: AppColors.primary,
                 ),
-                const SizedBox(height: AppDimens.paddingS),
-                Text(
-                  'Boy ve kilo bilgilerinizi ekleyin',
+                const SizedBox(height: AppDimens.paddingS),                Text(
+                  loc.translate('add_height_weight_prompt'),
                   style: AppTextStyles.bodyTextBold,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppDimens.paddingXS),
                 Text(
-                  'VKİ hesaplaması ve daha kişiselleştirilmiş öneriler için boy ve kilo bilgilerinizi girin.',
+                  loc.translate('bmi_calculation_note'),
                   style: AppTextStyles.bodyTextSmall,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppDimens.paddingM),
-                ElevatedButton.icon(
+                const SizedBox(height: AppDimens.paddingM),                ElevatedButton.icon(
                   onPressed: () => _showEditProfileDialog(provider),
                   icon: const Icon(Icons.add),
-                  label: const Text('Boy/Kilo Ekle'),
+                  label: Text(loc.translate('add_height_weight')),
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppDimens.paddingM),
         ],
-        
-        // İlaç kullanım istatistikleri
+          // Medication usage statistics
         FutureBuilder<Map<String, dynamic>>(
           future: _getMedicationStatistics(),
           builder: (context, snapshot) {
@@ -306,9 +333,8 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 ),
               );
             }
-            
-            if (snapshot.hasError || !snapshot.hasData) {
-              return const Text('İlaç istatistikleri yüklenemedi');
+              if (snapshot.hasError || !snapshot.hasData) {
+              return Text(loc.translate('error'));
             }
             
             final stats = snapshot.data!;
@@ -323,27 +349,26 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'İlaç Kullanım İstatistikleri',
+                    loc.translate('medication_statistics'),
                     style: AppTextStyles.bodyTextBold,
                   ),
                   const SizedBox(height: AppDimens.paddingM),
                   Row(
-                    children: [
-                      _buildHealthMetricItem(
+                    children: [                      _buildHealthMetricItem(
                         icon: Icons.medication,
-                        title: 'Aktif İlaçlar',
+                        title: loc.translate('active_medications'),
                         value: '${stats['activeCount'] ?? 0}',
                         color: AppColors.primary,
                       ),
                       _buildHealthMetricItem(
                         icon: Icons.check_circle,
-                        title: 'Uyum Oranı',
+                        title: loc.translate('adherence_rate'),
                         value: '${stats['adherenceRate'] ?? 0}%',
                         color: _getAdherenceColor(stats['adherenceRate']),
                       ),
                       _buildHealthMetricItem(
                         icon: Icons.calendar_today,
-                        title: 'Bugünkü Dozlar',
+                        title: loc.translate('todays_doses'),
                         value: '${stats['todayDoses'] ?? 0}',
                         color: AppColors.secondary,
                       ),
@@ -359,9 +384,8 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Haftalık İlaç Uyum Oranı',
+                          children: [                            Text(
+                              loc.translate('weekly_adherence'),
                               style: AppTextStyles.bodyTextSmall,
                             ),
                             Text(
@@ -398,9 +422,8 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                       const SizedBox(height: AppDimens.paddingM),
                       const Divider(),
                       const SizedBox(height: AppDimens.paddingS),
-                      
-                      Text(
-                        'İlaç Alma Zamanlaması',
+                        Text(
+                        loc.translate('medication_timing'),
                         style: AppTextStyles.bodyTextSmall,
                       ),
                       const SizedBox(height: AppDimens.paddingS),
@@ -408,16 +431,17 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                       Row(
                         children: [
                           _buildTimingStatItem(
-                            label: 'Zamanında',
+                            label: loc.translate('on_time'),
                             percentage: stats['onTimePercentage'],
                             color: Colors.green,
                           ),
                           _buildTimingStatItem(
-                            label: 'Gecikmeli',
+                            label: loc.translate('delayed'),
                             percentage: stats['latePercentage'] ?? 0,
                             color: Colors.orange,
                           ),
-                          _buildTimingStatItem(                            label: 'Atlanmış',
+                          _buildTimingStatItem(
+                            label: loc.translate('skipped'),
                             percentage: stats['missedPercentage'] ?? 0,
                             color: Colors.red,
                           ),
@@ -433,7 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       ],
     );
   }
-    // İlaç alma zamanlama istatistiği öğesi
+  // Medication timing statistics item
   Widget _buildTimingStatItem({
     required String label, 
     required num percentage, 
@@ -496,22 +520,22 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
         ],
       ),
     );
-  }// Uyum oranı açıklaması
+  }  // Adherence description
   String _getAdherenceDescription(dynamic adherenceRate) {
+    final loc = AppLocalizations.of(context);
     final rate = adherenceRate is int || adherenceRate is double 
       ? (adherenceRate as num).toDouble() 
       : 0.0;
     
     if (rate < 50) {
-      return 'İlaç uyumunuz düşük. İlaçlarınızı düzenli almak için hatırlatıcıları etkinleştirmeyi düşünün.';
+      return loc.translate('adherence_low');
     }
     if (rate < 80) {
-      return 'İlaç uyumunuz orta seviyede. Daha iyi sonuçlar için ilaçlarınızı daha düzenli almaya çalışın.';
+      return loc.translate('adherence_medium');
     }
-    return 'İlaç uyumunuz yüksek. Harika gidiyorsunuz, bu şekilde devam edin!';
+    return loc.translate('adherence_high');
   }
-  
-  // Sağlık metrik öğesi widget'ı
+    // Health metric item widget
   Widget _buildHealthMetricItem({
     required IconData icon,
     required String title,
@@ -551,7 +575,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       ),
     );
   }
-    // Uyum oranı rengini hesaplama
+  // Calculate adherence rate color
   Color _getAdherenceColor(dynamic adherenceRate) {
     final rate = adherenceRate is int || adherenceRate is double 
       ? (adherenceRate as num).toDouble() 
@@ -561,21 +585,20 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
     if (rate < 80) return Colors.orange;
     return Colors.green;
   }
-    // İlaç istatistiklerini alma
+  // Get medication statistics
   Future<Map<String, dynamic>> _getMedicationStatistics() async {
     final medicationProvider = Provider.of<MedicationProvider>(context, listen: false);
     
-    // Aktif ilaç sayısı
+    // Active medication count
     final medications = await medicationProvider.loadMedications();
     final activeCount = medications.where((med) => med.isActive).length;
     
-    // Bugünkü dozlar
+    // Today's doses
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     final todayLogs = await medicationProvider.loadMedicationLogsByDate(date: todayDate);
     final todayDoses = todayLogs.length;
-    
-    // Uyum oranı hesaplama
+      // Calculate adherence rate
     int totalDoses = 0;
     int takenDoses = 0;
     int takenOnTime = 0;
@@ -583,7 +606,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
     int skippedDoses = 0;
     int missedDoses = 0;
     
-    // Son bir haftadaki tüm logları al
+    // Get all logs from the past week
     final weekAgo = DateTime.now().subtract(const Duration(days: 7));
     final logsLastWeek = await medicationProvider.loadMedicationLogsByDateRange(
       startDate: weekAgo,
@@ -592,46 +615,44 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
     
     if (logsLastWeek.isNotEmpty) {
       totalDoses = logsLastWeek.length;
-      
-      for (final log in logsLastWeek) {
-        // Alınmış dozları hesapla
+        for (final log in logsLastWeek) {
+        // Calculate taken doses
         if (log.isTaken) {
           takenDoses++;
           
-          // Zamanında veya gecikmeli alınmış mı?
+          // Taken on time or delayed?
           if (log.delayInMinutes != null && log.delayInMinutes! > 15) {
             takenLate++;
           } else {
             takenOnTime++;
           }
         } 
-        // Atlanmış dozları hesapla
+        // Calculate skipped doses
         else if (log.isSkipped) {
           skippedDoses++;
         } 
-        // Alınmamış ve zamanı geçmiş dozları hesapla
+        // Calculate missed doses (not taken and time passed)
         else if (DateTime.now().isAfter(log.scheduledTime)) {
           missedDoses++;
         }
       }
     }
-    
-    // Uyum ve zamanlama oranlarını hesapla
+      // Calculate adherence and timing rates
     final adherenceRate = totalDoses > 0 
       ? ((takenDoses / totalDoses) * 100).round() 
       : 100;
     
-    // Zamanında alınma oranı
+    // On-time rate
     final onTimePercentage = takenDoses > 0
       ? ((takenOnTime / takenDoses) * 100).round()
       : 0;
     
-    // Gecikmeli alınma oranı
+    // Delayed rate
     final latePercentage = takenDoses > 0
       ? ((takenLate / takenDoses) * 100).round()
       : 0;
     
-    // Atlanmış/Kaçırılmış oranı
+    // Missed/Skipped rate
     final missedPercentage = totalDoses > 0
       ? (((skippedDoses + missedDoses) / totalDoses) * 100).round()
       : 0;
@@ -647,8 +668,9 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       'totalDoses': totalDoses,
     };
   }
-
   Widget _buildEmergencyContactsSection(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -656,7 +678,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Acil Durum Kişileri',
+              loc.translate('emergency_contacts'),
               style: AppTextStyles.heading2,
             ),
             IconButton(
@@ -678,9 +700,8 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                   size: 48,
                   color: AppColors.textSecondary,
                 ),
-                const SizedBox(height: AppDimens.paddingM),
-                Text(
-                  'Henüz acil durum kişisi eklenmemiş',
+                const SizedBox(height: AppDimens.paddingM),                Text(
+                  loc.translate('no_emergency_contacts'),
                   style: AppTextStyles.bodyText.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -688,7 +709,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 const SizedBox(height: AppDimens.paddingS),
                 ElevatedButton(
                   onPressed: () => _showAddEmergencyContactDialog(provider),
-                  child: const Text('Acil Durum Kişisi Ekle'),
+                  child: Text(loc.translate('add_emergency_contact')),
                 ),
               ],
             ),
@@ -752,14 +773,13 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppDimens.paddingM),
-                      Row(
+                      const SizedBox(height: AppDimens.paddingM),                      Row(
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () => _callPhoneNumber(contact.phoneNumber),
                               icon: const Icon(Icons.phone),
-                              label: const Text('Ara'),
+                              label: Text(loc.translate('call')),
                             ),
                           ),
                           const SizedBox(width: AppDimens.paddingM),
@@ -767,26 +787,24 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                             child: OutlinedButton.icon(
                               onPressed: () => _sendSms(contact.phoneNumber),
                               icon: const Icon(Icons.message),
-                              label: const Text('Mesaj'),
+                              label: Text(loc.translate('message')),
                             ),
                           ),
                         ],
                       ),
                       if (contact.email?.isNotEmpty == true) ...[
-                        const SizedBox(height: AppDimens.paddingS),
-                        OutlinedButton.icon(
+                        const SizedBox(height: AppDimens.paddingS),                        OutlinedButton.icon(
                           onPressed: () => _sendEmail(contact.email!),
                           icon: const Icon(Icons.email),
-                          label: const Text('E-posta Gönder'),
+                          label: Text(loc.translate('send_email')),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(40),
                           ),
                         ),
                       ],
-                      const SizedBox(height: AppDimens.paddingS),
-                      SwitchListTile(
-                        title: const Text(
-                          'Doz alınmadığında bilgilendir',
+                      const SizedBox(height: AppDimens.paddingS),                      SwitchListTile(
+                        title: Text(
+                          loc.translate('notify_on_missed_doses'),
                           style: AppTextStyles.bodyTextSmall,
                         ),
                         value: contact.notifyOnMissedDoses,
@@ -809,9 +827,10 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
           ),
       ],
     );
-  }
-  void _showEditProfileDialog(UserProfileProvider provider) {
-    // Boy ve kilo değerlerini formda göstermek için tanımla
+  }  void _showEditProfileDialog(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
+    
+    // Set height and weight values in the form
     if (provider.userProfile?.height != null) {
       _heightController.text = provider.userProfile!.height!.toStringAsFixed(0);
     }
@@ -823,22 +842,20 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Profili Düzenle'),
+          title: Text(loc.translate('edit_profile')),
           content: Form(
             key: _formKey,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
+                children: [                  TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Ad Soyad',
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                    validator: (value) {
+                    decoration: InputDecoration(
+                      labelText: loc.translate('your_name'),
+                      prefixIcon: const Icon(Icons.person),
+                    ),                    validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Lütfen adınızı girin';
+                        return loc.translate('please_enter_name');
                       }
                       return null;
                     },
@@ -846,91 +863,84 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                   const SizedBox(height: AppDimens.paddingM),
                   TextFormField(
                     controller: _ageController,
-                    decoration: const InputDecoration(
-                      labelText: 'Yaş',
-                      prefixIcon: Icon(Icons.cake),
+                    decoration: InputDecoration(
+                      labelText: loc.translate('age_years').replaceFirst('{age}', ''),
+                      prefixIcon: const Icon(Icons.cake),
                     ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
+                    keyboardType: TextInputType.number,                    validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Lütfen yaşınızı girin';
+                        return loc.translate('please_enter_age');
                       }
                       final age = int.tryParse(value);
                       if (age == null || age <= 0 || age > 120) {
-                        return 'Geçerli bir yaş girin';
+                        return loc.translate('enter_valid_age');
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: AppDimens.paddingM),
-                  // Boy alanı
+                  const SizedBox(height: AppDimens.paddingM),                  // Height field
                   TextFormField(
-                    controller: _heightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Boy (cm)',
-                      prefixIcon: Icon(Icons.height),
-                      helperText: 'Örn: 175',
+                    controller: _heightController,                    decoration: InputDecoration(
+                      labelText: '${loc.translate('height')} (cm)',
+                      prefixIcon: const Icon(Icons.height),
+                      helperText: loc.translate('height_example'),
                     ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
+                    keyboardType: TextInputType.number,                    validator: (value) {
                       if (value != null && value.isNotEmpty) {
                         final height = double.tryParse(value);
                         if (height == null || height <= 0 || height > 250) {
-                          return 'Geçerli bir boy girin (1-250 cm)';
+                          return loc.translate('enter_valid_height');
                         }
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: AppDimens.paddingM),
-                  // Kilo alanı
+                  // Weight field
                   TextFormField(
-                    controller: _weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Kilo (kg)',
-                      prefixIcon: Icon(Icons.monitor_weight),
-                      helperText: 'Örn: 70.5',
+                    controller: _weightController,                    decoration: InputDecoration(
+                      labelText: '${loc.translate('weight')} (kg)',
+                      prefixIcon: const Icon(Icons.monitor_weight),
+                      helperText: loc.translate('weight_example'),
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (value) {
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),                    validator: (value) {
                       if (value != null && value.isNotEmpty) {
                         final weight = double.tryParse(value);
                         if (weight == null || weight <= 0 || weight > 500) {
-                          return 'Geçerli bir kilo girin (1-500 kg)';
+                          return loc.translate('enter_valid_weight');
                         }
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: AppDimens.paddingM),
-                  TextFormField(
+                  const SizedBox(height: AppDimens.paddingM),                  TextFormField(
                     controller: _medicalConditionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Sağlık Durumu (Opsiyonel)',
-                      prefixIcon: Icon(Icons.medical_services),
+                    decoration: InputDecoration(
+                      labelText: loc.translate('health_condition') + ' (' + loc.translate('optional') + ')',
+                      prefixIcon: const Icon(Icons.medical_services),
                     ),
                     maxLines: 2,
                   ),
                   const SizedBox(height: AppDimens.paddingM),
                   TextFormField(
                     controller: _notesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notlar (Opsiyonel)',
-                      prefixIcon: Icon(Icons.note),
+                    decoration: InputDecoration(
+                      labelText: loc.translate('notes') + ' (' + loc.translate('optional') + ')',
+                      prefixIcon: const Icon(Icons.note),
                     ),
                     maxLines: 3,
                   ),
                 ],
               ),
             ),
-          ),
-          actions: [
+          ),          actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
+              child: Text(loc.translate('cancel')),
             ),
             ElevatedButton(
-              onPressed: () {                if (_formKey.currentState!.validate()) {
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
                   // Parse height and weight values from controllers
                   double? height;
                   double? weight;
@@ -948,38 +958,35 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                     dateOfBirth: provider.userProfile?.dateOfBirth,
                     weight: weight,
                     height: height,
-                    allergies: provider.userProfile?.allergies,
-                    medicalConditions: _medicalConditionController.text.isEmpty
+                    allergies: provider.userProfile?.allergies,                  medicalConditions: _medicalConditionController.text.isEmpty
                         ? {}
-                        : {'Genel': _medicalConditionController.text},
-                    healthNotes: _notesController.text.isEmpty
+                        : {'General': _medicalConditionController.text},
+                  healthNotes: _notesController.text.isEmpty
                         ? {}
-                        : {'Genel': _notesController.text},
+                        : {'General': _notesController.text},
                     emergencyContacts:
                         provider.userProfile?.emergencyContacts ?? [],
                   );
                   provider.updateUserProfile(updatedProfile);
                   Navigator.pop(context);
-                  
-                  // Show success message
+                    // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profil başarıyla güncellendi'),
+                    SnackBar(
+                      content: Text(loc.translate('success')),
                       backgroundColor: AppColors.success,
-                      duration: Duration(seconds: 2),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
               },
-              child: const Text('Kaydet'),
+              child: Text(loc.translate('save')),
             ),
           ],
         );
       },
     );
-  }
-
-  void _showAddEmergencyContactDialog(UserProfileProvider provider) {
+  }  void _showAddEmergencyContactDialog(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
     final nameController = TextEditingController();
     final relationshipController = TextEditingController();
     final phoneController = TextEditingController();
@@ -992,48 +999,46 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Acil Durum Kişisi Ekle'),
+              title: Text(loc.translate('add_emergency_contact')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
+                  children: [                    TextFormField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ad Soyad',
-                        prefixIcon: Icon(Icons.person),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('full_name'),
+                        prefixIcon: const Icon(Icons.person),
                       ),
                     ),
                     const SizedBox(height: AppDimens.paddingM),
                     TextFormField(
                       controller: relationshipController,
-                      decoration: const InputDecoration(
-                        labelText: 'Yakınlık',
-                        prefixIcon: Icon(Icons.people),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('relationship'),
+                        prefixIcon: const Icon(Icons.people),
                       ),
                     ),
                     const SizedBox(height: AppDimens.paddingM),
                     TextFormField(
                       controller: phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Telefon',
-                        prefixIcon: Icon(Icons.phone),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('phone'),
+                        prefixIcon: const Icon(Icons.phone),
                       ),
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: AppDimens.paddingM),
                     TextFormField(
                       controller: emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'E-posta (Opsiyonel)',
-                        prefixIcon: Icon(Icons.email),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('email_optional'),
+                        prefixIcon: const Icon(Icons.email),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: AppDimens.paddingM),
+                    ),                    const SizedBox(height: AppDimens.paddingM),
                     SwitchListTile(
-                      title: const Text(
-                        'Doz alınmadığında bilgilendir',
+                      title: Text(
+                        loc.translate('notify_on_missed_doses'),
                       ),
                       value: notifyOnMissedDoses,
                       onChanged: (value) {
@@ -1048,7 +1053,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('İptal'),
+                  child: Text(loc.translate('cancel')),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -1068,14 +1073,14 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                       Navigator.pop(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Lütfen tüm zorunlu alanları doldurun'),
+                        SnackBar(
+                          content: Text(loc.translate('fill_required_fields')),
                           backgroundColor: AppColors.error,
                         ),
                       );
                     }
                   },
-                  child: const Text('Ekle'),
+                  child: Text(loc.translate('add')),
                 ),
               ],
             );
@@ -1084,12 +1089,12 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       },
     );
   }
-
   void _showEditEmergencyContactDialog(
     UserProfileProvider provider,
     int index,
     EmergencyContact contact,
   ) {
+    final loc = AppLocalizations.of(context);
     final nameController = TextEditingController(text: contact.name);
     final relationshipController =
         TextEditingController(text: contact.relationship);
@@ -1103,48 +1108,46 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Acil Durum Kişisini Düzenle'),
+              title: Text(loc.translate('edit_emergency_contact')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
+                  children: [                    TextFormField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ad Soyad',
-                        prefixIcon: Icon(Icons.person),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('full_name'),
+                        prefixIcon: const Icon(Icons.person),
                       ),
                     ),
                     const SizedBox(height: AppDimens.paddingM),
                     TextFormField(
                       controller: relationshipController,
-                      decoration: const InputDecoration(
-                        labelText: 'Yakınlık',
-                        prefixIcon: Icon(Icons.people),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('relationship'),
+                        prefixIcon: const Icon(Icons.people),
                       ),
                     ),
                     const SizedBox(height: AppDimens.paddingM),
                     TextFormField(
                       controller: phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Telefon',
-                        prefixIcon: Icon(Icons.phone),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('phone'),
+                        prefixIcon: const Icon(Icons.phone),
                       ),
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: AppDimens.paddingM),
                     TextFormField(
                       controller: emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'E-posta (Opsiyonel)',
-                        prefixIcon: Icon(Icons.email),
+                      decoration: InputDecoration(
+                        labelText: loc.translate('email_optional'),
+                        prefixIcon: const Icon(Icons.email),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: AppDimens.paddingM),
+                    ),                    const SizedBox(height: AppDimens.paddingM),
                     SwitchListTile(
-                      title: const Text(
-                        'Doz alınmadığında bilgilendir',
+                      title: Text(
+                        loc.translate('notify_on_missed_doses'),
                       ),
                       value: notifyOnMissedDoses,
                       onChanged: (value) {
@@ -1159,7 +1162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('İptal'),
+                  child: Text(loc.translate('cancel')),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -1179,14 +1182,14 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                       Navigator.pop(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Lütfen tüm zorunlu alanları doldurun'),
+                        SnackBar(
+                          content: Text(loc.translate('fill_required_fields')),
                           backgroundColor: AppColors.error,
                         ),
                       );
                     }
                   },
-                  child: const Text('Güncelle'),
+                  child: Text(loc.translate('update_contact')),
                 ),
               ],
             );
@@ -1195,24 +1198,25 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       },
     );
   }
-
   void _showDeleteEmergencyContactDialog(
     UserProfileProvider provider,
     int index,
     EmergencyContact contact,
   ) {
+    final loc = AppLocalizations.of(context);
+    
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Acil Durum Kişisini Sil'),
+          title: Text(loc.translate('delete')),
           content: Text(
-            '${contact.name} kişisini silmek istediğinize emin misiniz?',
+            loc.translate('confirm_delete'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
+              child: Text(loc.translate('cancel')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1222,23 +1226,23 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error,
               ),
-              child: const Text('Sil'),
+              child: Text(loc.translate('delete')),
             ),
           ],
         );
       },
     );
   }
-
   Future<void> _callPhoneNumber(String phoneNumber) async {
+    final loc = AppLocalizations.of(context);
     final url = Uri.parse('tel:$phoneNumber');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Telefon araması başlatılamadı'),
+          SnackBar(
+            content: Text(loc.translate('call_failed')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1247,14 +1251,15 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
   }
 
   Future<void> _sendSms(String phoneNumber) async {
+    final loc = AppLocalizations.of(context);
     final url = Uri.parse('sms:$phoneNumber');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SMS gönderilemedi'),
+          SnackBar(
+            content: Text(loc.translate('sms_failed')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -1263,23 +1268,23 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
   }
 
   Future<void> _sendEmail(String email) async {
+    final loc = AppLocalizations.of(context);
     final url = Uri.parse('mailto:$email');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('E-posta gönderilemedi'),
+          SnackBar(
+            content: Text(loc.translate('email_failed')),
             backgroundColor: AppColors.error,
           ),
         );
       }
     }
-  }
-
-  // Bildirim ve alarm ayarları kartı
+  }// Notification and alarm settings card
   Widget _buildNotificationSettingsCard(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
     final notificationSettings = provider.userProfile!.notificationSettings;
     
     return Column(
@@ -1289,13 +1294,13 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Bildirim ve Alarm Ayarları',
+              loc.translate('notification_and_alarm_settings'),
               style: AppTextStyles.heading3,
             ),
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () => _showNotificationSettingsDialog(provider),
-              tooltip: 'Bildirim Ayarlarını Düzenle',
+              tooltip: loc.translate('edit_notification_settings'),
             ),
           ],
         ),
@@ -1308,13 +1313,12 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
           ),
           padding: const EdgeInsets.all(AppDimens.paddingM),
           child: Column(
-            children: [
-              // Bildirim açık/kapalı durumu
+            children: [              // Notification status (enabled/disabled)
               _buildSettingRow(
-                'Bildirimler',
+                loc.translate('notifications'),
                 notificationSettings.enableNotifications 
-                  ? 'Açık' 
-                  : 'Kapalı',
+                  ? loc.translate('on')
+                  : loc.translate('off'),
                 notificationSettings.enableNotifications
                   ? Icons.notifications_active
                   : Icons.notifications_off,
@@ -1325,12 +1329,12 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               
               const Divider(),
               
-              // Alarm açık/kapalı durumu
+              // Alarm status (enabled/disabled)
               _buildSettingRow(
-                'Sesli Alarmlar',
+                loc.translate('sound_alarms'),
                 notificationSettings.enableAlarms 
-                  ? 'Açık' 
-                  : 'Kapalı',
+                  ? loc.translate('on')
+                  : loc.translate('off'),
                 notificationSettings.enableAlarms
                   ? Icons.alarm_on
                   : Icons.alarm_off,
@@ -1341,22 +1345,21 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               
               const Divider(),
               
-              // Alarm tipi
+              // Alarm type
               _buildSettingRow(
-                'Alarm Türü',
+                loc.translate('alarm_type'),
                 _getAlarmTypeName(notificationSettings.alarmType),
                 Icons.music_note,
                 AppColors.primary,
               ),
               
               const Divider(),
-              
-              // Titreşim durumu
+                // Vibration status
               _buildSettingRow(
-                'Titreşim',
+                loc.translate('vibrate'),
                 notificationSettings.vibrate
-                  ? 'Açık'
-                  : 'Kapalı',
+                  ? loc.translate('on')
+                  : loc.translate('off'),
                 notificationSettings.vibrate
                   ? Icons.vibration
                   : Icons.do_not_disturb_on,
@@ -1367,23 +1370,22 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
               
               const Divider(),
               
-              // Hatırlatma aralığı
+              // Reminder interval
               _buildSettingRow(
-                'Hatırlatma Aralığı',
-                '${notificationSettings.reminderInterval} dakika',
+                loc.translate('reminder_interval'),
+                '${notificationSettings.reminderInterval} ${loc.translate('minutes')}',
                 Icons.update,
                 AppColors.primary,
               ),
               
               const SizedBox(height: AppDimens.paddingM),
-              
-              // Ayar düzenleme butonu
+                // Settings edit button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _showNotificationSettingsDialog(provider),
                   icon: const Icon(Icons.settings),
-                  label: const Text('Bildirim Ayarlarını Düzenle'),
+                  label: Text(loc.translate('edit_notification_settings')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -1439,18 +1441,21 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       ),
     );
   }  String _getAlarmTypeName(AlarmType type) {
+    final loc = AppLocalizations.of(context);
+    
     switch (type) {
       case AlarmType.medicationAlarm:
-        return 'İlaç Hatırlatıcı';
+        return loc.translate('medication_reminder_alarm');
       case AlarmType.emergencyAlarm:
-        return 'Acil Durum Alarmı';
+        return loc.translate('emergency_alarm_type');
       case AlarmType.gentleAlarm:
-        return 'Nazik Alarm';
+        return loc.translate('gentle_alarm_type');
       case AlarmType.customAlarm:
-        return 'Özel Alarm';
+        return loc.translate('custom_alarm_type');
     }
   }
-    void _showNotificationSettingsDialog(UserProfileProvider provider) {
+  void _showNotificationSettingsDialog(UserProfileProvider provider) {
+    final loc = AppLocalizations.of(context);
     final currentSettings = provider.userProfile!.notificationSettings;
     bool enableNotifications = currentSettings.enableNotifications;
     bool enableAlarms = currentSettings.enableAlarms;
@@ -1463,23 +1468,22 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Bildirim ve Alarm Ayarları'),
+          title: Text(loc.translate('notification_and_alarm_settings')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Bildirimler açık/kapalı
+              children: [                // Notifications on/off
                 SwitchListTile(
-                  title: const Text('Bildirimler'),
-                  subtitle: const Text('İlaç hatırlatmaları için bildirimler'),
+                  title: Text(loc.translate('notifications')),
+                  subtitle: Text(loc.translate('notification_description')),
                   value: enableNotifications,
                   activeColor: AppColors.primary,
                   onChanged: (value) {
                     setState(() {
                       enableNotifications = value;
                       if (!value) {
-                        // Bildirimler kapatılırsa alarmlar da kapatılır
+                        // If notifications are disabled, also disable alarms
                         enableAlarms = false;
                       }
                     });
@@ -1488,10 +1492,10 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 
                 const Divider(),
                 
-                // Alarmlar açık/kapalı
+                // Sound alarms on/off
                 SwitchListTile(
-                  title: const Text('Sesli Alarmlar'),
-                  subtitle: const Text('İlaç vakti geldiğinde alarm çal'),
+                  title: Text(loc.translate('sound_alarms')),
+                  subtitle: Text(loc.translate('sound_alarms_description')),
                   value: enableAlarms,
                   activeColor: AppColors.primary,
                   onChanged: enableNotifications 
@@ -1502,21 +1506,20 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                       }
                     : null,
                 ),
-                
-                // Alarm tipi seçici (Bildirimler ve Alarmlar açıksa)
+                  // Alarm type selector (if Notifications and Alarms are enabled)
                 if (enableNotifications && enableAlarms) ...[
                   const Divider(),
-                  const Padding(
-                    padding: EdgeInsets.only(
+                  Padding(
+                    padding: const EdgeInsets.only(
                       left: AppDimens.paddingM, 
                       top: AppDimens.paddingM,
                       bottom: AppDimens.paddingS,
                     ),
-                    child: Text('Alarm Tipi'),
+                    child: Text(loc.translate('alarm_type_setting')),
                   ),
                   RadioListTile<AlarmType>(
-                    title: const Text('İlaç Hatırlatıcı'),
-                    subtitle: const Text('Standart hatırlatma sesi'),
+                    title: Text(loc.translate('medication_reminder_alarm')),
+                    subtitle: Text(loc.translate('standard_sound')),
                     value: AlarmType.medicationAlarm,
                     groupValue: alarmType,
                     activeColor: AppColors.primary,
@@ -1527,8 +1530,8 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                     },
                   ),
                   RadioListTile<AlarmType>(
-                    title: const Text('Acil Durum Alarmı'),
-                    subtitle: const Text('Daha yüksek sesli alarm'),
+                    title: Text(loc.translate('emergency_alarm_type')),
+                    subtitle: Text(loc.translate('louder_alarm_description')),
                     value: AlarmType.emergencyAlarm,
                     groupValue: alarmType,
                     activeColor: AppColors.primary,
@@ -1537,10 +1540,9 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                         alarmType = value!;
                       });
                     },
-                  ),
-                  RadioListTile<AlarmType>(
-                    title: const Text('Nazik Alarm'),
-                    subtitle: const Text('Daha yumuşak sesli alarm'),
+                  ),                  RadioListTile<AlarmType>(
+                    title: Text(loc.translate('gentle_alarm_type')),
+                    subtitle: Text(loc.translate('softer_alarm_description')),
                     value: AlarmType.gentleAlarm,
                     groupValue: alarmType,
                     activeColor: AppColors.primary,
@@ -1551,8 +1553,8 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                     },
                   ),
                   RadioListTile<AlarmType>(
-                    title: const Text('Özel Alarm'),
-                    subtitle: const Text('Farklı bildirim sesi kullan'),
+                    title: Text(loc.translate('custom_alarm_type')),
+                    subtitle: Text(loc.translate('custom_sound_description')),
                     value: AlarmType.customAlarm,
                     groupValue: alarmType,
                     activeColor: AppColors.primary,
@@ -1564,17 +1566,16 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                   ),
                   
                   const Divider(),
-                  
-                  // Alarm süresi seçici
+                    // Alarm duration selector
                   Padding(
                     padding: const EdgeInsets.all(AppDimens.paddingM),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Alarm Süresi'),
+                        Text(loc.translate('alarm_duration')),
                         const SizedBox(height: AppDimens.paddingS),
                         Text(
-                          '${alarmDuration} saniye', 
+                          '${alarmDuration} ${loc.translate('seconds')}', 
                           style: AppTextStyles.bodyTextBold,
                         ),
                         Slider(
@@ -1584,7 +1585,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                           divisions: 5,
                           activeColor: AppColors.primary,
                           inactiveColor: AppColors.primary.withOpacity(0.2),
-                          label: '$alarmDuration saniye',
+                          label: '${alarmDuration} ${loc.translate('seconds')}',
                           onChanged: (value) {
                             setState(() {
                               alarmDuration = value.toInt();
@@ -1596,11 +1597,10 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                   ),
                   
                   const Divider(),
-                  
-                  // Titreşim açık/kapalı
+                    // Vibration setting
                   SwitchListTile(
-                    title: const Text('Titreşim'),
-                    subtitle: const Text('Bildirim ile birlikte titreşim'),
+                    title: Text(loc.translate('vibration_setting')),
+                    subtitle: Text(loc.translate('vibration_description')),
                     value: vibrate,
                     activeColor: AppColors.primary,
                     onChanged: (value) {
@@ -1613,17 +1613,16 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 
                 if (enableNotifications) ...[
                   const Divider(),
-                  
-                  // Hatırlatma aralığı seçici
+                    // Reminder interval selector
                   Padding(
                     padding: const EdgeInsets.all(AppDimens.paddingM),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Tekrar Hatırlatma Aralığı'),
+                        Text(loc.translate('reminder_repeat_time')),
                         const SizedBox(height: AppDimens.paddingXS),
-                        const Text(
-                          'İlaç alınmadığında tekrar hatırlatma süresi',
+                        Text(
+                          loc.translate('reminder_not_taken_description'),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
@@ -1631,7 +1630,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                         ),
                         const SizedBox(height: AppDimens.paddingS),
                         Text(
-                          '$reminderInterval dakika', 
+                          '${reminderInterval} ${loc.translate('minutes')}', 
                           style: AppTextStyles.bodyTextBold,
                         ),
                         Slider(
@@ -1641,7 +1640,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                           divisions: 6,
                           activeColor: AppColors.primary,
                           inactiveColor: AppColors.primary.withOpacity(0.2),
-                          label: '$reminderInterval dakika',
+                          label: '${reminderInterval} ${loc.translate('minutes')}',
                           onChanged: (value) {
                             setState(() {
                               reminderInterval = value.toInt();
@@ -1654,15 +1653,14 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 ],
               ],
             ),
-          ),
-          actions: [
+          ),          actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
+              child: Text(loc.translate('cancel')),
             ),
             ElevatedButton(
               onPressed: () {
-                // Yeni ayarları oluştur
+                // Create new settings
                 final newSettings = NotificationSettings(
                   enableNotifications: enableNotifications,
                   enableAlarms: enableAlarms,
@@ -1672,7 +1670,7 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                   reminderInterval: reminderInterval,
                 );
                 
-                // Kullanıcı profilini yeni ayarlarla güncelle
+                // Update user profile with new settings
                 _updateNotificationSettings(provider, newSettings);
                 
                 Navigator.pop(context);
@@ -1681,34 +1679,115 @@ class _ProfileScreenState extends State<ProfileScreen> {  final _formKey = Globa
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Kaydet'),
+              child: Text(loc.translate('save')),
             ),
           ],
         ),
       ),
+    );  }
+    // Language settings card
+  Widget _buildLanguageSettingsCard() {
+    final loc = AppLocalizations.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              loc.translate('language'),
+              style: AppTextStyles.heading3,
+            ),
+            IconButton(
+              icon: const Icon(Icons.translate),
+              onPressed: () => Navigator.pushNamed(context, '/language_settings'),
+              tooltip: loc.translate('edit'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppDimens.paddingM),
+          // Language selection card
+        InkWell(
+          onTap: () => Navigator.pushNamed(context, '/language_settings'),
+          borderRadius: BorderRadius.circular(AppDimens.radiusM),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDimens.radiusM),
+              color: AppColors.primary.withOpacity(0.05),
+            ),
+            padding: const EdgeInsets.all(AppDimens.paddingM),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusM),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.translate,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppDimens.paddingM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loc.translate('language'),
+                        style: AppTextStyles.bodyTextBold,
+                      ),
+                      const SizedBox(height: AppDimens.paddingXS),
+                      Consumer<LocaleProvider>(
+                        builder: (context, localeProvider, _) {
+                          return Text(
+                            localeProvider.isTurkish 
+                              ? loc.translate('turkish') 
+                              : loc.translate('english'),
+                            style: AppTextStyles.bodyText,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
-  }
-  
-  // Notification ayarlarını güncellemek için
+  }  // Method to update notification settings
   Future<void> _updateNotificationSettings(
     UserProfileProvider provider, 
     NotificationSettings newSettings
   ) async {
+    final loc = AppLocalizations.of(context);
     final updatedProfile = provider.userProfile!.copyWith(
       notificationSettings: newSettings,
     );
     
     await provider.updateUserProfile(updatedProfile);
     
-    // Başarı mesajı göster
+    // Show success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bildirim ayarları güncellendi'),
+        SnackBar(
+          content: Text(loc.translate('notification_settings_updated')),
           backgroundColor: AppColors.success,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
-    }
-  }
+    }  }
   }

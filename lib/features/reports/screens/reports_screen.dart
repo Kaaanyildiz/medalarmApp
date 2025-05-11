@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/features/medications/models/medication.dart';
 import 'package:medalarmm/core/models/user_profile.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
@@ -92,14 +93,15 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       }
     }
   }
-    @override
+  @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(      appBar: AppBar(
-        title: const Text('Raporlar'),
+        title: Text(loc.translate('reports')),
         centerTitle: true,
         elevation: 0,
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,        bottom: TabBar(
+        foregroundColor: Colors.white,bottom: TabBar(
           controller: _tabController,
           isScrollable: false,
           indicatorColor: Colors.white,
@@ -112,29 +114,27 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           unselectedLabelStyle: AppTextStyles.caption.copyWith(
             fontSize: 12,
           ),
-          indicatorWeight: 3,
-          tabs: const [
+          indicatorWeight: 3,          tabs: [
             Tab(
-              icon: Icon(Icons.dashboard_rounded, size: 20),
-              text: 'Genel Bakış',
+              icon: const Icon(Icons.dashboard_rounded, size: 20),
+              text: loc.translate('overview_tab'),
             ),
             Tab(
-              icon: Icon(Icons.trending_up_rounded, size: 20),
-              text: 'Uyum Raporları',
+              icon: const Icon(Icons.trending_up_rounded, size: 20),
+              text: loc.translate('adherence_reports_tab'),
             ),
             Tab(
-              icon: Icon(Icons.medication_rounded, size: 20),
-              text: 'İlaç Detayları',
+              icon: const Icon(Icons.medication_rounded, size: 20),
+              text: loc.translate('medication_details_tab'),
             ),
             Tab(
-              icon: Icon(Icons.monitor_heart_rounded, size: 20),
-              text: 'Sağlık Metrikleri',
+              icon: const Icon(Icons.monitor_heart_rounded, size: 20),
+              text: loc.translate('health_metrics_tab'),
             ),
           ],
         ),        actions: [
           PopupMenuButton<ReportPeriod>(
-            icon: const Icon(Icons.calendar_today, color: Colors.white),
-            tooltip: 'Rapor dönemini seç',
+            icon: const Icon(Icons.calendar_today, color: Colors.white),            tooltip: loc.translate('select_report_period'),
             onSelected: (ReportPeriod period) {
               setState(() {
                 _reportPeriod = period;
@@ -142,17 +142,17 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               _loadData();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ReportPeriod.week,
-                child: Text('Son 7 Gün'),
+                child: Text(loc.translate('last_7_days')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ReportPeriod.month,
-                child: Text('Son 30 Gün'),
+                child: Text(loc.translate('last_30_days')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: ReportPeriod.year,
-                child: Text('Son 365 Gün'),
+                child: Text(loc.translate('last_365_days')),
               ),
             ],
           ),
@@ -170,8 +170,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
             ),
     );
   }
-  
-  Widget _buildOverviewTab() {
+    Widget _buildOverviewTab() {
+    final loc = AppLocalizations.of(context);
+    
     // Başarılı ilaç sayısı (uyum oranı > %80)
     final successfulMedications = _adherenceReports
         .where((report) => report.adherenceRate >= 0.8)
@@ -213,8 +214,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [                  const Text(
-                    'Genel İlaç Uyum Oranı',
+                children: [                  Text(
+                    loc.translate('overall_adherence_rate'),
                     style: AppTextStyles.heading3,
                   ),
                   const SizedBox(height: 8),
@@ -232,8 +233,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                       fontWeight: FontWeight.bold,
                       color: _getAdherenceColor(overallAdherence),
                     ),
-                  ),
-                  const SizedBox(height: 8),                  Text(
+                  ),                  const SizedBox(height: 8),
+                  Text(
                     'Toplam $totalTakenDoses / $totalPlannedDoses doz alındı',
                     style: AppTextStyles.bodyTextSmall,
                   ),
