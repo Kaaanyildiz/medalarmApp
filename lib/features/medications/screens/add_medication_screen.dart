@@ -480,13 +480,13 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       ],
     );
   }
-  
-  Widget _buildDaySelector() {
+    Widget _buildDaySelector() {
+    final loc = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Hangi günler alınacak?',
+          loc.translate('which_days_taken'),
           style: AppTextStyles.heading3,
         ),
         const SizedBox(height: AppDimens.paddingS),
@@ -515,41 +515,38 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         ),
       ],
     );
-  }
-
-  Widget _buildStockInfo() {
+  }  Widget _buildStockInfo() {
+    final loc = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Stok Bilgileri',
+          loc.translate('stock_information'),
           style: AppTextStyles.heading2,
         ),
         const SizedBox(height: AppDimens.paddingM),
         Row(
           children: [
-            Expanded(
-              child: TextFormField(
+            Expanded(              child: TextFormField(
                 controller: _currentStockController,
-                decoration: const InputDecoration(
-                  labelText: 'Mevcut Stok',
-                  hintText: 'Kaç adet kaldı',
-                  prefixIcon: Icon(Icons.inventory),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('current_stock'),
+                  hintText: loc.translate('how_many_left'),
+                  prefixIcon: const Icon(Icons.inventory),
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             ),
             const SizedBox(width: AppDimens.paddingM),
-            Expanded(
-              child: TextFormField(
+            Expanded(              child: TextFormField(
                 controller: _stockUnitController,
-                decoration: const InputDecoration(
-                  labelText: 'Stok Birimi',
-                  hintText: 'tablet, şişe, ampul',
-                  prefixIcon: Icon(Icons.category),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('stock_unit'),
+                  hintText: loc.translate('unit_hint'),
+                  prefixIcon: const Icon(Icons.category),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
@@ -558,23 +555,21 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         const SizedBox(height: AppDimens.paddingM),
         Row(
           children: [
-            Expanded(
-              child: TextFormField(
+            Expanded(              child: TextFormField(
                 controller: _stockThresholdController,
-                decoration: const InputDecoration(
-                  labelText: 'Uyarı Eşiği',
-                  hintText: 'Kaç adet kalınca uyarı',
-                  prefixIcon: Icon(Icons.warning),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('warning_threshold'),
+                  hintText: loc.translate('threshold_hint'),
+                  prefixIcon: const Icon(Icons.warning),
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             ),
             const SizedBox(width: AppDimens.paddingM),
-            Expanded(
-              child: SwitchListTile(
-                title: const Text('Stok Hatırlatma'),
+            Expanded(              child: SwitchListTile(
+                title: Text(loc.translate('stock_reminder')),
                 value: _remindRefill,
                 onChanged: (bool value) {
                   setState(() {
@@ -589,31 +584,31 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       ],
     );
   }
-
   Widget _buildAdditionalInfo() {
+    final loc = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Ek Bilgiler',
+          loc.translate('additional_info'),
           style: AppTextStyles.heading2,
         ),
         const SizedBox(height: AppDimens.paddingM),
         TextFormField(
           controller: _notesController,
-          decoration: const InputDecoration(
-            labelText: 'Notlar',
-            hintText: 'İlaçla ilgili ek bilgiler',
-            prefixIcon: Icon(Icons.note),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: loc.translate('notes'),
+            hintText: loc.translate('notes_hint'),
+            prefixIcon: const Icon(Icons.note),
+            border: const OutlineInputBorder(),
           ),
           maxLines: 3,
         ),
         const SizedBox(height: AppDimens.paddingM),
         if (_isEditing)
           SwitchListTile(
-            title: const Text('İlaç Aktif'),
-            subtitle: const Text('İlaç hatırlatmaları aktif mi?'),
+            title: Text(loc.translate('medication_active')),
+            subtitle: Text(loc.translate('medication_reminders_active')),
             value: _isActive,
             onChanged: (bool value) {
               setState(() {
@@ -625,8 +620,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       ],
     );
   }
-
   Widget _buildSubmitButton() {
+    final loc = AppLocalizations.of(context);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -637,21 +632,20 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
           foregroundColor: Colors.white,
         ),
         child: Text(
-          _isEditing ? 'İlacı Güncelle' : 'İlacı Kaydet',
+          _isEditing ? loc.translate('update_medication') : loc.translate('save_medication'),
           style: AppTextStyles.button,
         ),
       ),
     );
   }
-
   void _saveMedication() {
+    final loc = AppLocalizations.of(context);
     if (_formKey.currentState!.validate()) {
       final medicationProvider = Provider.of<MedicationProvider>(context, listen: false);
-      
-      // Spesifik günler için, en az bir gün seçilmiş olmalı
+        // Spesifik günler için, en az bir gün seçilmiş olmalı
       if (_frequency == MedicationFrequency.specificDays && _selectedDays.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lütfen en az bir gün seçin')),
+          SnackBar(content: Text(loc.translate('select_at_least_one_day'))),
         );
         return;
       }
@@ -698,14 +692,14 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       if (_isEditing) {
         medicationProvider.updateMedication(medication).then((_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('İlaç güncellendi')),
+            SnackBar(content: Text(loc.translate('medication_updated'))),
           );
           Navigator.pop(context, true);
         });
       } else {
         medicationProvider.addMedication(medication).then((_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('İlaç eklendi')),
+            SnackBar(content: Text(loc.translate('medication_added'))),
           );
           Navigator.pop(context, true);
         });

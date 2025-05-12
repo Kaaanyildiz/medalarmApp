@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
+import 'package:medalarmm/features/medications/models/medication_log.dart';
 
 enum MedicationFrequency {
   daily,       // Her gün
@@ -45,6 +46,13 @@ class Medication {
   final int dosesPerTime;                     // Her seferde kaç doz alınacak
   final String? notes;                        // İlaç hakkında notlar
   final bool isActive;                        // İlacın aktif olup olmadığı
+  final List<MedicationLog> medicationLogs;
+
+  /// Alınan doz sayısı
+  int get takenCount => medicationLogs.where((log) => log.isTaken).length;
+
+  /// Planlanan toplam doz sayısı
+  int get scheduledCount => medicationLogs.length;
 
   Medication({
     String? id,
@@ -68,10 +76,12 @@ class Medication {
     this.dosesPerTime = 1,
     this.notes,
     bool? isActive,
+    List<MedicationLog>? medicationLogs,
   })  : id = id ?? const Uuid().v4(),
         timesOfDay = timesOfDay ?? [],
         daysOfWeek = daysOfWeek ?? [],
-        isActive = isActive ?? true;
+        isActive = isActive ?? true,
+        medicationLogs = medicationLogs ?? [];
   
   // Kalan stok gün sayısını hesapla
   int? get daysUntilEmpty {
@@ -146,6 +156,7 @@ class Medication {
     int? dosesPerTime,
     String? notes,
     bool? isActive,
+    List<MedicationLog>? medicationLogs,
   }) {
     return Medication(
       id: id,
@@ -169,6 +180,7 @@ class Medication {
       dosesPerTime: dosesPerTime ?? this.dosesPerTime,
       notes: notes ?? this.notes,
       isActive: isActive ?? this.isActive,
+      medicationLogs: medicationLogs ?? this.medicationLogs,
     );
   }
   
@@ -204,6 +216,7 @@ class Medication {
       'dosesPerTime': dosesPerTime,
       'notes': notes,
       'isActive': isActive,
+      'medicationLogs': medicationLogs.map((log) => log.toJson()).toList(),
     };
   }
   
@@ -232,6 +245,13 @@ class Medication {
         ? Color(colorValue)
         : defaultColor;
     
+    List<MedicationLog> logs = [];
+    if (json['medicationLogs'] != null) {
+      logs = (json['medicationLogs'] as List)
+          .map((logJson) => MedicationLog.fromJson(logJson))
+          .toList();
+    }
+    
     return Medication(
       id: json['id'],
       name: json['name'],
@@ -254,6 +274,7 @@ class Medication {
       dosesPerTime: json['dosesPerTime'] ?? 1,
       notes: json['notes'],
       isActive: json['isActive'] ?? true,
+      medicationLogs: logs,
     );
   }
   

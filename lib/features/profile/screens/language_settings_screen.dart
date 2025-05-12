@@ -31,10 +31,26 @@ class LanguageSettingsScreen extends StatelessWidget {
             // Türkçe dil seçeneği
             _buildLanguageOption(
               context: context,
-              title: 'Türkçe',
-              subtitle: loc.translate('turkish'),
-              isSelected: localeProvider.isTurkish,
-              onTap: () => localeProvider.setTurkish(),
+              title: 'Türkçe',              subtitle: loc.translate('turkish'),
+              isSelected: localeProvider.isTurkish,              onTap: () async {
+                // Dili Türkçe'ye ayarla
+                await localeProvider.setTurkish();
+                
+                // Ayarlama bittikten sonra uygulamayı yeniden başlat
+                if (context.mounted) {
+                  // Şimdi restart bilgisi ile geri dön
+                  Navigator.pop(context, true);
+                  
+                  // Forced restart for language change
+                  if (context.mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/',
+                      (route) => false,
+                    );
+                  }
+                }
+              },
               flagEmoji: '🇹🇷',
             ),
             
@@ -43,10 +59,26 @@ class LanguageSettingsScreen extends StatelessWidget {
             // İngilizce dil seçeneği
             _buildLanguageOption(
               context: context,
-              title: 'English',
-              subtitle: loc.translate('english'),
-              isSelected: localeProvider.isEnglish, 
-              onTap: () => localeProvider.setEnglish(),
+              title: 'English',              subtitle: loc.translate('english'),
+              isSelected: localeProvider.isEnglish,              onTap: () async {
+                // Dili İngilizce'ye ayarla
+                await localeProvider.setEnglish();
+                
+                // Ayarlama bittikten sonra uygulamayı yeniden başlat
+                if (context.mounted) {
+                  // Şimdi restart bilgisi ile geri dön
+                  Navigator.pop(context, true);
+                  
+                  // Forced restart for language change
+                  if (context.mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/',
+                      (route) => false,
+                    );
+                  }
+                }
+              },
               flagEmoji: '🇺🇸',
             ),
             

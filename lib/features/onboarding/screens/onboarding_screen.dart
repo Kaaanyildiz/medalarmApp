@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/core/models/user_profile.dart';
 import 'package:medalarmm/features/profile/providers/user_profile_provider.dart';
 import 'package:medalarmm/app/home_screen.dart';
@@ -52,10 +53,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
-          children: [            // Üst kısım - İlerleme göstergesi ve atla butonu
+          children: [
+            // Üst kısım - İlerleme göstergesi ve atla butonu
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDimens.paddingM,
@@ -100,14 +103,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       },
-                      child: const Text('Atla'),
+                      child: Text(loc.translate('skip')),
                     )
                     .animate()
                     .fadeIn(duration: 400.ms),
                 ],
               ),
             ),
-              // Sayfa içeriği
+            // Sayfa içeriği
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -115,26 +118,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   setState(() {
                     _currentPage = page;
                   });
-                },              physics: const ClampingScrollPhysics(),
+                },
+                physics: const ClampingScrollPhysics(),
                 children: [
                   _buildOnboardingPage(
                     image: 'assets/images/placeholder.png',
-                    title: 'MedAlarm\'a Hoş Geldiniz',
-                    description: 'İlaçlarınızı düzenli almanıza yardımcı olacak akıllı ilaç takip uygulaması.',
+                    title: loc.translate('welcome_to_medalarm'),
+                    description: loc.translate('app_description'),
                     icon: Icons.medication_liquid,
                     lottieAsset: 'assets/animations/welcome.json',
                   ),
                   _buildOnboardingPage(
                     image: 'assets/images/placeholder.png',
-                    title: 'İlaç Hatırlatıcıları',
-                    description: 'İlaçlarınızı zamanında almanız için sesli ve görsel hatırlatmalar alın.',
+                    title: loc.translate('medication_reminders'),
+                    description: loc.translate('reminders_description'),
                     icon: Icons.alarm_on,
                     lottieAsset: 'assets/animations/notifications.json',
                   ),
                   _buildOnboardingPage(
                     image: 'assets/images/placeholder.png',
-                    title: 'Sağlık Takibi',
-                    description: 'İlaç kullanımınızı ve sağlık durumunuzu analiz edin, raporlar alın.',
+                    title: loc.translate('health_tracking'),
+                    description: loc.translate('tracking_description'),
                     icon: Icons.monitor_heart,
                     lottieAsset: 'assets/animations/health_tracking.json',
                   ),
@@ -142,7 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
-              // Alt kısım - İleri veya başla butonu
+            // Alt kısım - İleri veya başla butonu
             Padding(
               padding: const EdgeInsets.all(AppDimens.paddingL),
               child: SizedBox(
@@ -168,7 +172,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
                   ),
                   child: Text(
-                    _currentPage == _numPages - 1 ? 'Başla' : 'Devam Et',
+                    _currentPage == _numPages - 1 ? loc.translate('get_started') : loc.translate('continue'),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -195,7 +199,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       ),
     );
-  }  // Normal onboarding sayfası şablonu
+  }
+  
+  // Normal onboarding sayfası şablonu
   Widget _buildOnboardingPage({
     required String image,
     required String title,
@@ -275,8 +281,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+  
   // Son sayfa - Kullanıcı adı girişi
   Widget _buildFinalPage() {
+    final loc = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(AppDimens.paddingL),
       child: SingleChildScrollView(
@@ -306,7 +314,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: AppDimens.paddingL),
             
             Text(
-              'Son Adım',
+              loc.translate('last_step'),
               style: AppTextStyles.heading1,
               textAlign: TextAlign.center,
             )
@@ -317,7 +325,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: AppDimens.paddingM),
             
             Text(
-              'Kişiselleştirilmiş deneyim için lütfen adınızı girin.',
+              loc.translate('personalized_exp'),
               style: AppTextStyles.bodyText,
               textAlign: TextAlign.center,
             )
@@ -333,15 +341,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Adınız',
-                  hintText: 'Adınızı girin',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: loc.translate('your_name_label'),
+                  hintText: loc.translate('your_name_hint'),
+                  prefixIcon: const Icon(Icons.person),
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Lütfen adınızı girin';
+                    return loc.translate('please_enter_your_name');
                   }
                   return null;
                 },
@@ -360,9 +368,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: AppDimens.paddingL),
             
             // Gizlilik ve kullanım şartları (opsiyonel)
-            const Text(
-              'Devam ederek Gizlilik Politikamızı ve Kullanım Şartlarımızı kabul etmiş olursunuz.',
-              style: TextStyle(
+            Text(
+              loc.translate('privacy_terms'),
+              style: const TextStyle(
                 fontSize: 12,
                 color: Colors.grey,
               ),

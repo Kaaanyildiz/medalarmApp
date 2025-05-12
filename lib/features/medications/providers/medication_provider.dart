@@ -17,6 +17,15 @@ class MedicationProvider with ChangeNotifier {
   List<Medication> get medications => _medications;
   List<MedicationLog> get medicationLogs => _medicationLogs;
   bool get isLoading => _isLoading;
+  int get activeMedicationsCount => _medications.where((med) => med.isActive).length;
+
+  double get adherenceRate {
+    if (_medications.isEmpty) return 0.0;
+    final totalTaken = _medications.fold<int>(0, (sum, med) => sum + med.takenCount);
+    final totalScheduled = _medications.fold<int>(0, (sum, med) => sum + med.scheduledCount);
+    return totalScheduled > 0 ? (totalTaken / totalScheduled) * 100 : 0.0;
+  }
+
   // İlaçları veritabanından yükle
   Future<List<Medication>> loadMedications() async {
     _setLoading(true);
@@ -290,7 +299,7 @@ class MedicationProvider with ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('İlaç alındı olarak işaretlenirken hata oluştu: $e');
+      print('Error marking medication as taken: $e');
     } finally {
       _setLoading(false);
     }
@@ -397,7 +406,7 @@ class MedicationProvider with ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('İlaç atlandı olarak işaretlenirken hata oluştu: $e');
+      print('Error marking medication as skipped: $e');
     } finally {
       _setLoading(false);
     }

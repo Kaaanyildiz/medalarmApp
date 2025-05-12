@@ -84,8 +84,7 @@ MedAlarm, ilaç tedavinizi **kusursuz bir şekilde** yönetmenize yardımcı ola
       <img src="assets/images/placeholder.png" alt="Takvim Görünümü" width="100%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
     </td>
   </tr>
-  <tr>
-    <td width="60%">
+  <tr>    <td width="60%">
       <h3>📈 Gelişmiş Sağlık Takibi</h3>
       <ul>
         <li><b>Kişisel Sağlık Profili:</b> Boy, kilo, yaş ve sağlık durumu takibi</li>
@@ -95,6 +94,19 @@ MedAlarm, ilaç tedavinizi **kusursuz bir şekilde** yönetmenize yardımcı ola
     </td>
     <td width="40%">
       <img src="assets/images/placeholder.png" alt="Sağlık Takibi" width="100%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    </td>
+  </tr>
+  <tr>
+    <td width="60%">
+      <h3>🌐 Çoklu Dil Desteği</h3>
+      <ul>
+        <li><b>Türkçe ve İngilizce:</b> Uygulamayı tercih ettiğiniz dilde kullanın</li>
+        <li><b>Kolay Dil Değiştirme:</b> Ayarlar menüsünden tek dokunuşla dil değişimi</li>
+        <li><b>Yerelleştirilmiş İçerik:</b> Tüm içerik ve bildirimler seçtiğiniz dilde</li>
+      </ul>
+    </td>
+    <td width="40%">
+      <img src="assets/images/placeholder.png" alt="Dil Desteği" width="100%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
     </td>
   </tr>
 </table>
@@ -154,7 +166,7 @@ flutter run
 - **FL Chart & Percent Indicator**: Görsel grafikler ve istatistikler
 - **Table Calendar**: Takvim entegrasyonu
 - **Custom Animation**: Akıcı kullanıcı deneyimi
-- **Intl**: Türkçe dil desteği ve tarih/saat formatlaması
+- **Intl & Localization**: Türkçe ve İngilizce çoklu dil desteği
 
 ## 🔮 Gelecek Vizyonumuz
 
@@ -230,6 +242,7 @@ MedAlarm'ın gelişimine katkıda bulunmak ister misiniz? Sağlık teknolojileri
   <h3>Sağlığınızı MedAlarm'a emanet edin!</h3>
   <p><i>Çünkü sağlığınız, bizim önceliğimiz.</i></p>
   <p>MedAlarm, ❤️ ve ☕ ile Türkiye'de geliştirilmiştir | © 2025</p>
+  <p>🇹🇷 Türkçe & 🇺🇸 English Dil Desteği ile</p>
 </div>
 
 

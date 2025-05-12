@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
 import 'package:medalarmm/app/home_screen.dart';
 import 'package:medalarmm/features/onboarding/screens/onboarding_screen.dart';
+import 'package:medalarmm/features/onboarding/providers/locale_provider.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -30,14 +33,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.0, 0.7, curve: Curves.easeInOut),
+        curve: const Interval(0.0, 0.7, curve: Curves.easeInOut),
       ),
     );
     
     _scaleAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.0, 0.6, curve: Curves.easeOutBack),
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack),
       ),
     );
     
@@ -52,25 +55,40 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.dispose();
     super.dispose();
   }
+
   Future<void> _initializeApp() async {
-    // Burada veritabanı ve diğer kaynak başlatma işlemleri yapılabilir
-    
-    // Ana sayfa yükleme için daha gerçekçi bir gecikme
-    await Future.delayed(const Duration(seconds: 2));
-    
-    // Onboarding tamamlandı mı kontrol et
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
-    
-    // Ana ekrana veya Onboarding ekranına yönlendir
-    if (mounted) {
-      if (onboardingCompleted) {
-        // Onboarding daha önce tamamlanmışsa ana ekrana git
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else {
-        // Onboarding tamamlanmamışsa onboarding ekranına git
+    try {
+      // LocaleProvider'ı kontrol et
+      final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+      
+      // Dil ayarlarının yüklenmesini bekle
+      while (!localeProvider.isInitialized) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+      }
+      
+      // Onboarding tamamlandı mı kontrol et
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+      
+      // Ana ekrana veya Onboarding ekranına yönlendir
+      if (mounted) {
+        await Future.delayed(const Duration(seconds: 2));
+        
+        if (onboardingCompleted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error initializing app: $e');
+      // Hata durumunda varsayılan locale ile devam et
+      if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const OnboardingScreen()),
         );
@@ -93,7 +111,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Özelleştirilmiş logo animasyonu
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
@@ -108,14 +125,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           ),
                         ],
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.medication,
                         size: 60,
                         color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Uygulama adı
                     Text(
                       'MedAlarm',
                       style: TextStyle(
@@ -133,9 +149,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Slogan
                     Text(
-                      'İlaçlarınız için güvenilir hatırlatma',
+                      AppLocalizations.of(context).translate('app_tagline'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -143,8 +158,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                     ),
                     const SizedBox(height: 48),
-                    // Yükleme göstergesi
-                    SizedBox(
+                    const SizedBox(
                       width: 40,
                       height: 40,
                       child: CircularProgressIndicator(

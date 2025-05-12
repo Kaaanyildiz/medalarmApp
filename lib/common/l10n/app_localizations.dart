@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppLocalizations {
   final Locale locale;
 
   AppLocalizations(this.locale);
-
   // Helper method to keep the code in the widgets concise
   static AppLocalizations of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+    // Always get the most current instance from Localizations
+    final instance = Localizations.of<AppLocalizations>(context, AppLocalizations);
+    if (instance == null) {
+      // Fallback for testing or when not in a MaterialApp context
+      final locale = Localizations.maybeLocaleOf(context) ?? const Locale('tr', 'TR');
+      return AppLocalizations(locale);
+    }
+    return instance;
   }
 
   // Static member to have a simple access to the delegate from the MaterialApp
@@ -22,15 +29,22 @@ class AppLocalizations {
 
   // Mevcut cihazın yerel ayarlarına göre veya kullanıcı tercihine göre 
   // uygun dil belirleme
-  static Locale? localeResolutionCallback(
-      Locale? deviceLocale, Iterable<Locale> supportedLocales) {
-    // Önce kullanıcının tercihine bakılır (shared preferences'dan okunur)
+  static Future<Locale?> localeResolutionCallback(
+      Locale? deviceLocale, Iterable<Locale> supportedLocales) async {
+    // Önce kullanıcının tercihine bak
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguageCode = prefs.getString('locale');
+    if (savedLanguageCode != null) {
+      final savedCountryCode = savedLanguageCode == 'tr' ? 'TR' : 'US';
+      return Locale(savedLanguageCode, savedCountryCode);
+    }
     
-    // Kullanıcı tercihi yoksa cihaz diline bakılır
-    for (var locale in supportedLocales) {
-      if (deviceLocale != null &&
-          deviceLocale.languageCode == locale.languageCode) {
-        return locale;
+    // Kullanıcı tercihi yoksa cihaz diline bak
+    if (deviceLocale != null) {
+      for (var locale in supportedLocales) {
+        if (deviceLocale.languageCode == locale.languageCode) {
+          return locale;
+        }
       }
     }
     
@@ -47,8 +61,11 @@ class AppLocalizations {
     _localizedStrings = _getTranslations();
     return true;
   }
-
   String translate(String key) {
+    // Mevcut dil için çevirileri taze olarak getir
+    _localizedStrings = _getTranslations();
+    
+    // Çeviriyi geri döndür, eğer çeviri yoksa anahtar değerini döndür
     return _localizedStrings[key] ?? key;
   }
   Map<String, String> _getTranslations() {
@@ -191,10 +208,13 @@ class AppLocalizations {
         'taken_doses': 'Alınan',
         'skipped_doses': 'Atlanmış',
         'delayed_doses': 'Gecikmiş',
-        'total_doses': 'Toplam',
-        'daily_medication_adherence': 'Günlük İlaç Uyum Grafiği',
+        'total_doses': 'Toplam',        'daily_medication_adherence': 'Günlük İlaç Uyum Grafiği',
         'select_medication': 'İlaç Seçin',
         'no_records_for_medication': 'Bu ilaç için kayıt bulunamadı',
+        'report_loading_error': 'Rapor verileri yüklenirken hata oluştu',
+        'reports_loading': 'Raporlar yükleniyor...',
+        'medication_count_percentage': 'İlaçların %{percentage}\'i',
+        'adherence_dose_count': 'İlaç uyumu ve doz sayısı',
         'body_measurements': 'Vücut Ölçümleri',
         'health_advice': 'Sağlık Tavsiyeleri',        'bmi_thin': 'Zayıf',
         'bmi_normal': 'Normal',
@@ -227,13 +247,38 @@ class AppLocalizations {
         'stock_depleted': 'Stok tükendi!',
         'inventory_units_count': 'adet',
         'remaining': 'kaldı',
-        'approx': 'yaklaşık',
-        'days': 'gün',
+        'approx': 'yaklaşık',        'days': 'gün',
         'no_last_refill': 'Son stok girişi yok',
         'last_refill': 'Son stok',
         'times_per_day_format': 'Günde {times} kez, her seferde {doses} doz',
         'medication': 'İlaç',
         'medication_details': 'İlaç Detayları',
+        'daily_medication_schedule': 'Günlük İlaç Çizelgesi',
+        'medication_count': '{count} İlaç',
+        'no_medication_planned': 'Bu tarihte planlanmış ilaç kaydı yok',
+        'add_new_medication': 'Yeni İlaç Ekle',
+        'loading_medication_info': 'İlaç bilgileri yükleniyor...',
+        'unknown_medication': 'Bilinmeyen İlaç',
+        'status_taken': 'Alındı',
+        'status_skipped': 'Atlandı',
+        'status_missed': 'Alınmadı',
+        'status_waiting': 'Bekliyor',
+        'scheduled': 'Planlanan',
+        'taken': 'Alındı',
+        'note': 'Not',
+        'minute_abbreviation': 'dk',
+        'delay': 'gecikme',
+        'take': 'Aldım',
+        'skip': 'Atla',
+        'medication_marked_as_taken': 'İlaç başarıyla alındı olarak işaretlendi',
+        'medication_marked_as_skipped': 'İlaç atlandı olarak işaretlendi',
+        'error': 'Hata',
+        'skip_medication': 'İlacı Atla',
+        'skip_confirmation': 'Bu ilacı almayı atlamak istediğinizden emin misiniz?',
+        'optional_note': 'Not (isteğe bağlı)',
+        'skip_reason_hint': 'Atlama nedenini belirtebilirsiniz',
+        'cancel': 'İptal',
+        'skip_button': 'Atla',
         
         // Gün isimleri
         'monday': 'Pazartesi',
@@ -247,6 +292,140 @@ class AppLocalizations {
         // Bildirim kanalı
         'notification_channel_name': 'İlaç Hatırlatmaları',
         'notification_channel_description': 'İlaç hatırlatmaları için bildirim kanalı',
+        
+        // İlaç tipleri için çeviriler
+        'med_type_pill': 'Hap',
+        'med_type_syrup': 'Şurup',
+        'med_type_injection': 'Enjeksiyon',
+        'med_type_drops': 'Damla',
+        'med_type_spray': 'Sprey',
+        'med_type_ointment': 'Merhem',
+        'med_type_cream': 'Krem',
+        'med_type_other': 'Diğer',
+        
+        // İlaç ekleme ekranı için çeviriler
+        'basic_info': 'Temel Bilgiler',
+        'medication_name_required': 'İlaç Adı *',
+        'medication_name_hint': 'İlaç adını girin',
+        'please_enter_name': 'Lütfen ilaç adını girin',
+        'dosage_hint': 'örn. 500mg, 5ml',
+        'medication_type': 'İlaç Tipi',        'which_days_taken': 'Hangi günler alınacak?',
+        'stock_information': 'Stok Bilgileri',
+        'current_stock': 'Mevcut Stok',
+        'how_many_left': 'Kaç adet kaldı',
+        'stock_unit': 'Stok Birimi',
+        'unit_hint': 'tablet, şişe, ampul',
+        'warning_threshold': 'Uyarı Eşiği',
+        'threshold_hint': 'Kaç adet kalınca uyarı',
+        'stock_reminder': 'Stok Hatırlatma',
+        'additional_info': 'Ek Bilgiler',
+        'notes_hint': 'İlaçla ilgili ek bilgiler',        'medication_active': 'İlaç Aktif',
+        'medication_reminders_active': 'İlaç hatırlatmaları aktif mi?',
+        'update_medication': 'İlacı Güncelle',
+        'save_medication': 'İlacı Kaydet',
+        'select_at_least_one_day': 'Lütfen en az bir gün seçin',
+        'medication_updated': 'İlaç güncellendi',
+        'medication_added': 'İlaç eklendi',
+        
+        // Onboarding ekranı için çeviriler
+        'welcome_to_medalarm': 'Welcome to MedAlarm',
+        'app_description': 'Smart medication tracking app that will help you take your medications regularly.',
+        'medication_reminders': 'Medication Reminders',
+        'reminders_description': 'Get audio and visual reminders to take your medications on time.',
+        'health_tracking': 'Health Tracking',
+        'tracking_description': 'Analyze your medication usage and health status, get reports.',
+        'continue': 'Continue',
+        'get_started': 'Get Started',
+        'last_step': 'Last Step',
+        'personalized_exp': 'Please enter your name for a personalized experience.',
+        'your_name_label': 'Your Name',
+        'your_name_hint': 'Enter your name',
+        'please_enter_your_name': 'Please enter your name',
+        'privacy_terms': 'By continuing, you agree to our Privacy Policy and Terms of Use.',
+        
+        // Raporlar ekranı için ek çeviriler        'health_advice_message': 'Boy ve kilo bilgilerinizi girerek kişiselleştirilmiş sağlık tavsiyelerine erişebilirsiniz.',
+        
+        // İlaç listesi için çeviriler
+        'no_medication_found': 'İlaç Bulunamadı',
+        'edit_button': 'Düzenle',
+        'medication_details': 'Detay',
+        'no_time_specified': 'Zaman belirtilmemiş',
+        'every_day': 'Her gün',
+        'medication_active': 'Aktif',
+        'medication_inactive': 'Pasif',
+        'health_summary': 'Sağlık Özeti',
+        'personal_info': 'Kişisel Bilgiler',
+        'name_not_entered': 'İsim Girilmedi',
+        'age_years': '{age} yaşında',
+        'please_enter_age': 'Lütfen yaşınızı girin',
+        'health_condition': 'Sağlık Durumu',
+        'bmi': 'VKİ',
+        'height': 'Boy',
+        'weight': 'Kilo',
+        'add_height_weight': 'Boy/Kilo Ekle',
+        'update': 'Güncelle',
+        'add_height_weight_prompt': 'Boy ve kilo bilgilerinizi ekleyin',
+        'bmi_calculation_note': 'VKİ hesaplaması ve kişiselleştirilmiş öneriler için boy ve kilonuzu girin.',
+        'medication_statistics': 'İlaç İstatistikleri',
+        'active_medications': 'Aktif İlaçlar',
+        'adherence_rate': 'Uyum Oranı',
+        'todays_doses': 'Bugünkü Dozlar',
+        'weekly_adherence': 'Haftalık İlaç Uyumu',
+        'medication_timing': 'İlaç Zamanlaması',
+        'on_time': 'Zamanında',
+        'delayed': 'Gecikmeli',
+        'skipped': 'Atlanmış',
+        'adherence_low': 'İlaç uyumunuz düşük. İlaçlarınızı düzenli almak için hatırlatıcıları etkinleştirmeyi düşünün.',
+        'adherence_medium': 'İlaç uyumunuz orta seviyede. Daha iyi sonuçlar için ilaçlarınızı daha düzenli almaya çalışın.',
+        'adherence_high': 'İlaç uyumunuz yüksek. Böyle devam edin!',
+        'emergency_contacts': 'Acil Durum Kişileri',
+        'no_emergency_contacts': 'Henüz acil durum kişisi eklenmemiş',
+        'edit_profile': 'Profili Düzenle',
+        'notification_and_alarm_settings': 'Bildirim ve Alarm Ayarları',
+        'notifications': 'Bildirimler',
+        'notification_description': 'İlaç hatırlatmaları için bildirimler',
+        'sound_alarms': 'Sesli Alarmlar',
+        'sound_alarms_description': 'İlaç zamanı geldiğinde alarm çal',
+        'alarm_type': 'Alarm Tipi',
+        'alarm_type_setting': 'Alarm Tipi Ayarı',
+        'medication_reminder_alarm': 'İlaç Hatırlatıcı',
+        'emergency_alarm_type': 'Acil Durum Alarmı',
+        'gentle_alarm_type': 'Nazik Alarm',
+        'custom_alarm_type': 'Özel Alarm',
+        'standard_sound': 'Standart hatırlatma sesi',
+        'louder_alarm_description': 'Daha yüksek sesli alarm',
+        'softer_alarm_description': 'Daha yumuşak alarm sesi',
+        'custom_sound_description': 'Farklı bir bildirim sesi kullan',
+        'vibration_setting': 'Titreşim',
+        'vibration_description': 'Bildirimle birlikte titreşim',
+        'reminder_repeat_time': 'Hatırlatma Tekrar Süresi',
+        'reminder_not_taken_description': 'İlaç alınmadığında hatırlatmanın tekrarlanma süresi',
+        'minutes': 'dakika',
+        'enter_valid_height': 'Lütfen geçerli bir boy girin (1-250 cm)',
+        'enter_valid_weight': 'Lütfen geçerli bir kilo girin (1-500 kg)',
+        'height_example': 'Örnek: 175',
+        'weight_example': 'Örnek: 70',
+        'optional': 'İsteğe bağlı',
+        'fill_required_fields': 'Lütfen gerekli alanları doldurun',
+        'relationship': 'Yakınlık Derecesi',
+        'full_name': 'Ad Soyad',
+        'call_failed': 'Arama başarısız oldu',
+        'sms_failed': 'SMS gönderilemedi',
+        'email_failed': 'E-posta gönderilemedi',
+        'app_tagline': 'İlaçlarınız için güvenilir hatırlatma',
+        'date_format_period': '{startDate} - {endDate} dönemi',
+        'month_may': 'Mayıs',
+        'month_january': 'Ocak',
+        'month_february': 'Şubat',
+        'month_march': 'Mart',
+        'month_april': 'Nisan',
+        'month_june': 'Haziran',
+        'month_july': 'Temmuz',
+        'month_august': 'Ağustos',
+        'month_september': 'Eylül',
+        'month_october': 'Ekim',
+        'month_november': 'Kasım',
+        'month_december': 'Aralık',
       };
     } else {
       // İngilizce çeviriler
@@ -464,8 +643,7 @@ class AppLocalizations {
         'select_report_period': 'Select report period',
         'last_7_days': 'Last 7 Days',
         'last_30_days': 'Last 30 Days',
-        'last_365_days': 'Last 365 Days',
-        'no_medication_data': 'No medication usage data available yet',
+        'last_365_days': 'Last 365 Days',        'no_medication_data': 'No medication usage data available yet',
         'good': 'Good',
         'medium': 'Medium',
         'low': 'Low',
@@ -481,12 +659,16 @@ class AppLocalizations {
         'daily_medication_adherence': 'Daily Medication Adherence Chart',
         'select_medication': 'Select Medication',
         'no_records_for_medication': 'No records found for this medication',
+        'report_loading_error': 'Error loading report data',
+        'reports_loading': 'Loading reports...',
+        'medication_count_percentage': '{percentage}% of medications',
+        'adherence_dose_count': 'Medication adherence and dose count',
         'body_measurements': 'Body Measurements',
         'health_advice': 'Health Advice',        'bmi_thin': 'Underweight',
         'bmi_normal': 'Normal Weight',
         'bmi_overweight': 'Overweight',
         'bmi_obese_value': 'Obese',
-        'health_metrics_not_available': 'Health metrics not available','add_height_weight_prompt': 'Add your height and weight in your profile to view your health metrics',
+        'health_metrics_not_available': 'Health metrics not available','add_height_weight_prompt': 'Add your height and weight information to view your health metrics',
         'edit_profile_info': 'Edit Profile Information',
         'report_refresh_data': 'Refresh Data',
         'report_medications_refreshed': 'Medication data refreshed',
@@ -519,10 +701,30 @@ class AppLocalizations {
         'no_last_refill': 'No last refill date',
         'last_refill': 'Last refill',
         'times_per_day_format': '{times} times per day, {doses} dose(s) each time',
-        'medication': 'Medication',
-        'medication_details': 'Medication Details',
+        'medication': 'Medication',        'medication_details': 'Medication Details',
         
-        // Day names
+        // Calendar screen translations
+        'daily_medication_schedule': 'Daily Medication Schedule',
+        'medication_count': '{count} Medication(s)',
+        'no_medication_planned': 'No medication planned for this date',
+        'add_new_medication': 'Add New Medication',
+        'loading_medication_info': 'Loading medication info...',
+        'unknown_medication': 'Unknown Medication',
+        'status_taken': 'Taken',
+        'status_skipped': 'Skipped',
+        'status_missed': 'Missed',
+        'status_waiting': 'Waiting',
+        'scheduled': 'Scheduled',
+        'minute_abbreviation': 'min',
+        'delay': 'delay',
+        'take': 'Take',
+        'skip': 'Skip',
+        'medication_marked_as_taken': 'Medication successfully marked as taken',
+        'medication_marked_as_skipped': 'Medication marked as skipped',
+        'skip_medication': 'Skip Medication',
+        'skip_confirmation': 'Are you sure you want to skip taking this medication?',
+        'optional_note': 'Note (optional)',
+        'skip_reason_hint': 'You can specify the reason for skipping',
         'monday': 'Monday',
         'tuesday': 'Tuesday',
         'wednesday': 'Wednesday',
@@ -534,6 +736,90 @@ class AppLocalizations {
         // Notification channel
         'notification_channel_name': 'Medication Reminders',
         'notification_channel_description': 'Notification channel for medication reminders',
+        
+        // İlaç tipleri için çeviriler
+        'med_type_pill': 'Pill',
+        'med_type_syrup': 'Syrup',
+        'med_type_injection': 'Injection',
+        'med_type_drops': 'Drops',
+        'med_type_spray': 'Spray',        'med_type_ointment': 'Ointment',
+        'med_type_cream': 'Cream',
+        'med_type_other': 'Other',
+        
+        // İlaç ekleme ekranı için çeviriler
+        'basic_info': 'Basic Information',
+        'medication_name_required': 'Medication Name *',
+        'medication_name_hint': 'Enter medication name',
+        'please_enter_name': 'Please enter medication name',
+        'dosage_hint': 'e.g. 500mg, 5ml',
+        'medication_type': 'Medication Type',
+        'which_days_taken': 'Which days will it be taken?',
+        'stock_information': 'Stock Information',
+        'current_stock': 'Current Stock',
+        'how_many_left': 'How many left',
+        'stock_unit': 'Stock Unit',
+        'unit_hint': 'tablet, bottle, vial',
+        'warning_threshold': 'Warning Threshold',
+        'threshold_hint': 'Alert when stock reaches this level',
+        'stock_reminder': 'Stock Reminder',
+        'additional_info': 'Additional Information',
+        'notes_hint': 'Additional notes about medication',        'medication_active': 'Medication Active',
+        'medication_reminders_active': 'Are medication reminders active?',
+        'update_medication': 'Update Medication',
+        'save_medication': 'Save Medication',
+        'select_at_least_one_day': 'Please select at least one day',
+        'edit': 'Edit',
+        'medication': 'Medication',
+        
+        // Onboarding screen translations
+        'welcome_to_medalarm': 'Welcome to MedAlarm',
+        'app_description': 'Smart medication tracking app that will help you take your medications regularly.',
+        'medication_reminders': 'Medication Reminders',
+        'reminders_description': 'Get audio and visual reminders to take your medications on time.',
+        'health_tracking': 'Health Tracking',
+        'tracking_description': 'Analyze your medication usage and health status, get reports.',
+        'continue': 'Continue',
+        'get_started': 'Get Started',
+        'last_step': 'Last Step',
+        'personalized_exp': 'Please enter your name for a personalized experience.',
+        'your_name_label': 'Your Name',
+        'your_name_hint': 'Enter your name',        'please_enter_your_name': 'Please enter your name',
+        'privacy_terms': 'By continuing, you agree to our Privacy Policy and Terms of Use.',
+        
+        // Additional report screen translations
+        'health_advice_message': 'Add your height and weight information to access personalized health advice.',
+        
+        // Medication list translations
+        'no_medication_found': 'No Medication Found',
+        'edit_button': 'Edit',
+        'medication_details': 'Details',
+        'no_time_specified': 'No time specified',
+        'every_day': 'Every day',
+        'medication_active': 'Active',
+        'medication_inactive': 'Inactive',
+        
+        // BMI advice translations
+        'bmi_thin_advice': 'Consider consulting a nutritionist for a healthy diet plan to gain weight.',
+        'bmi_normal_advice': 'Your weight is healthy. Maintain a balanced diet and regular exercise.',
+        'bmi_overweight_advice': 'Try reducing calorie intake and increasing physical activity to reach a healthier weight.',
+        'bmi_obese_advice': 'Consider consulting a healthcare professional for a personalized weight management plan.',
+        
+        // Report period format
+        'report_period_format': 'Report period: {startDate} - {endDate}',
+        'app_tagline': 'Reliable medication reminders for you',
+        'date_format_period': 'Period of {startDate} - {endDate}',
+        'month_may': 'May',
+        'month_january': 'January',
+        'month_february': 'February',
+        'month_march': 'March',
+        'month_april': 'April',
+        'month_june': 'June',
+        'month_july': 'July',
+        'month_august': 'August',
+        'month_september': 'September',
+        'month_october': 'October',
+        'month_november': 'November',
+        'month_december': 'December',
       };
     }
   }
@@ -541,16 +827,15 @@ class AppLocalizations {
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
+
   @override
   bool isSupported(Locale locale) {
-    return AppLocalizations.supportedLocales
-        .map((e) => e.languageCode)
-        .contains(locale.languageCode);
+    return ['tr', 'en'].contains(locale.languageCode);
   }
 
   @override
   Future<AppLocalizations> load(Locale locale) async {
-    AppLocalizations localizations = AppLocalizations(locale);
+    final localizations = AppLocalizations(locale);
     await localizations.load();
     return localizations;
   }

@@ -11,34 +11,44 @@ class LocaleProvider extends ChangeNotifier {
   // Getter
   Locale get locale => _locale;
   
-  // Kurulum ve tercihi yükleme
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+  
+  // Constructor'da async işlem yapmıyoruz
   LocaleProvider() {
-    _loadLocaleFromPrefs();
+    _loadSavedLocale();
   }
   
-  // SharedPreferences'tan dil tercihini yükler
-  Future<void> _loadLocaleFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString(_localeKey) ?? 'tr';
-    
-    // Dil koduna göre ülke kodunu belirle
-    String countryCode = languageCode == 'tr' ? 'TR' : 'US';
-    
-    _locale = Locale(languageCode, countryCode);
-    notifyListeners();
+  // Kaydedilmiş dil tercihini yükle
+  void _loadSavedLocale() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final languageCode = prefs.getString(_localeKey) ?? 'tr';
+      final countryCode = languageCode == 'tr' ? 'TR' : 'US';
+      _locale = Locale(languageCode, countryCode);
+      _isInitialized = true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading locale: $e');
+      _locale = const Locale('tr', 'TR');
+      _isInitialized = true;
+      notifyListeners();
+    }
   }
   
   // Dili değiştir ve tercihi kaydet
-  Future<void> setLocale(Locale locale) async {
-    if (_locale == locale) return;
+  Future<void> setLocale(Locale newLocale) async {
+    if (_locale == newLocale) return;
     
-    _locale = locale;
-    
-    // Tercihi kaydet
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_localeKey, locale.languageCode);
-    
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_localeKey, newLocale.languageCode);
+      
+      _locale = newLocale;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error saving locale preferences: $e');
+    }
   }
   
   // Türkçe mi kontrol et

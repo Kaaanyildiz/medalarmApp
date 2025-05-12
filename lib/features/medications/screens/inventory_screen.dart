@@ -270,7 +270,10 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
       // Son yenileme tarihi
     String lastRefillText = loc.translate('no_last_refill');
     if (medication.lastRefillDate != null) {
-      final dateFormat = DateFormat('dd/MM/yyyy');
+      // Yerelleştirmeyi kullanıcı diline göre ayarla
+      final locale = Localizations.localeOf(context).languageCode;
+      final localeCode = locale == 'en' ? 'en_US' : 'tr_TR';
+      final dateFormat = DateFormat('dd/MM/yyyy', localeCode);
       lastRefillText = '${loc.translate('last_refill')}: ${dateFormat.format(medication.lastRefillDate!)}';
     }
     

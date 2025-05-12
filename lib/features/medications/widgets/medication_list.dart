@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/features/medications/models/medication.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:medalarmm/features/medications/screens/medication_detail_screen.dart';
@@ -20,27 +21,27 @@ class MedicationList extends StatelessWidget {
   final String? emptyActionText;
   final VoidCallback? onRefresh;
   final Function(Medication)? onMedicationTap;
-
   const MedicationList({
     super.key, // Changed from Key? key to super.key
     required this.medications,
     this.showEmpty = true,
-    this.emptyTitle = 'İlaç Bulunamadı',
-    this.emptyMessage = 'Henüz ilaç eklenmemiş',
+    this.emptyTitle = 'no_medication_found',
+    this.emptyMessage = 'no_medications',
     this.onEmptyActionPressed,
-    this.emptyActionText = 'İlaç Ekle',
+    this.emptyActionText = 'add_medication',
     this.onRefresh,
     this.onMedicationTap,
   }); // Removed the : super(key: key); as it's now included directly in the parameter list
-
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    
     if (medications.isEmpty && showEmpty) {
       return EmptyState(
         icon: Icons.medication,
-        title: emptyTitle,
-        message: emptyMessage,
-        buttonText: emptyActionText,
+        title: loc.translate(emptyTitle),
+        message: loc.translate(emptyMessage),
+        buttonText: emptyActionText != null ? loc.translate(emptyActionText!) : null,
         onButtonPressed: onEmptyActionPressed,
       );
     }
@@ -54,9 +55,9 @@ class MedicationList extends StatelessWidget {
       },
     );
   }
-
   /// İlaç kartı widget'ı
   Widget _buildMedicationCard(Medication medication, BuildContext context) {
+    final loc = AppLocalizations.of(context);
     final provider = Provider.of<MedicationProvider>(context, listen: false);
     final adherencePercentage = provider.getMedicationAdherencePercentage(medication.id);
     final missedDosesCount = provider.getMissedDosesCount(medication.id);
@@ -112,7 +113,7 @@ class MedicationList extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Pasif',
+                        loc.translate('medication_inactive'),
                         style: AppTextStyles.captionBold.copyWith(
                           color: Colors.white,
                         ),
@@ -163,7 +164,7 @@ class MedicationList extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(AppDimens.radiusL),
                               ),
                               child: Text(
-                                'Aktif',
+                                loc.translate('medication_active'),
                                 style: AppTextStyles.captionBold.copyWith(
                                   color: Colors.white,
                                 ),
@@ -193,7 +194,7 @@ class MedicationList extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'uyum',
+                                  loc.translate('adherence'),
                                   style: AppTextStyles.caption.copyWith(
                                     color: AppColors.textLight,
                                     fontSize: 9,
@@ -246,7 +247,7 @@ class MedicationList extends StatelessWidget {
                                     const SizedBox(width: AppDimens.paddingXS),
                                     Expanded(
                                       child: Text(
-                                        _formatTimes(medication.timesOfDay),
+                                        _formatTimes(medication.timesOfDay, context),
                                         style: AppTextStyles.bodyTextSmall.copyWith(
                                           color: AppColors.textPrimary,
                                         ),
@@ -269,7 +270,7 @@ class MedicationList extends StatelessWidget {
                                     ),
                                     const SizedBox(width: AppDimens.paddingXS),
                                     Text(
-                                      _formatDays(medication.daysOfWeek),
+                                      _formatDays(medication.daysOfWeek, context),
                                       style: AppTextStyles.bodyTextSmall,
                                     ),
                                   ],
@@ -301,7 +302,7 @@ class MedicationList extends StatelessWidget {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '$missedDosesCount doz alınmadı',
+                                          '$missedDosesCount ${loc.translate('missed_doses')}',
                                           style: AppTextStyles.captionBold.copyWith(
                                             color: AppColors.error,
                                           ),
@@ -322,7 +323,7 @@ class MedicationList extends StatelessWidget {
                                       ),
                                       const SizedBox(width: AppDimens.paddingXS),
                                       Text(
-                                        'Stok: ${medication.currentStock} ${medication.stockUnit ?? 'adet'}',
+                                        '${loc.translate('stock')}: ${medication.currentStock} ${medication.stockUnit ?? loc.translate('inventory_units_count')}',
                                         style: AppTextStyles.bodyTextSmall.copyWith(
                                           color: _getStockColor(medication),
                                           fontWeight: _isLowStock(medication) ? FontWeight.w600 : FontWeight.w400,
@@ -335,12 +336,11 @@ class MedicationList extends StatelessWidget {
                                 const SizedBox(height: AppDimens.paddingM),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    // Düzenle butonu
+                                  children: [                                    // Düzenle butonu
                                     OutlinedButton.icon(
                                       onPressed: () => _navigateToEditMedication(medication, context),
                                       icon: const Icon(Icons.edit, size: 18),
-                                      label: const Text('Düzenle'),
+                                      label: Text(loc.translate('edit_button')),
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: medication.color,
                                         side: BorderSide(
@@ -361,7 +361,7 @@ class MedicationList extends StatelessWidget {
                                     OutlinedButton.icon(
                                       onPressed: () => _navigateToMedicationDetail(medication, context),
                                       icon: const Icon(Icons.visibility, size: 18),
-                                      label: const Text('Detay'),
+                                      label: Text(loc.translate('medication_details')),
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: AppColors.primary,
                                         side: BorderSide(
@@ -420,10 +420,10 @@ class MedicationList extends StatelessWidget {
            medication.currentStock != null &&
            medication.currentStock! <= medication.stockThreshold!;
   }
-
   /// Zamanları formatla
-  String _formatTimes(List<TimeOfDay> times) {
-    if (times.isEmpty) return 'Zaman belirtilmemiş';
+  String _formatTimes(List<TimeOfDay> times, BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    if (times.isEmpty) return loc.translate('no_time_specified');
     
     List<String> timeStrings = times.map((time) {
       return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -431,23 +431,23 @@ class MedicationList extends StatelessWidget {
     
     return timeStrings.join(', ');
   }
-
   /// Günleri formatla
-  String _formatDays(List<DayOfWeek> days) {
+  String _formatDays(List<DayOfWeek> days, BuildContext context) {
+    final loc = AppLocalizations.of(context);
     if (days.length == 7) {
-      return 'Her gün';
+      return loc.translate('every_day');
     }
     
     List<String> formattedDays = days.map((dayEnum) {
       final index = dayEnum.index;
       final dayStr = AppConstants.weekDays[index];
-      return AppConstants.weekDaysMap[dayStr] ?? dayStr;
+      return AppConstants.getLocalizedDayName(context, dayStr);
     }).toList();
     
     if (formattedDays.length <= 3) {
       return formattedDays.join(', ');
     } else {
-      return '${formattedDays.length} gün';
+      return '${formattedDays.length} ${loc.translate('days')}';
     }
   }
   /// İlaç detay ekranına git

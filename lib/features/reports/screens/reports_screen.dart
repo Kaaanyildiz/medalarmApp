@@ -82,9 +82,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       _adherenceReports = await _reportService.getAllMedicationsAdherenceReport(
         startDate: startDate,
         endDate: now,
-      );
-    } catch (e) {
-      print('Rapor verileri yüklenirken hata: $e');
+      );    } catch (e) {
+      final loc = AppLocalizations.of(context);
+      print(loc.translate('report_loading_error') + e.toString());
     } finally {
       if (mounted) {
         setState(() {
@@ -158,7 +158,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           ),
         ],
       ),      body: _isLoading
-          ? const Center(child: LoadingIndicator(message: 'Raporlar yükleniyor...'))
+          ? Center(child: LoadingIndicator(message: loc.translate('reports_loading')))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -172,6 +172,22 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
     Widget _buildOverviewTab() {
     final loc = AppLocalizations.of(context);
+    
+    // Dönem başlangıç ve bitiş tarihlerini belirle
+    final DateTime now = DateTime.now();
+    DateTime startDate;
+    
+    switch (_reportPeriod) {
+      case ReportPeriod.week:
+        startDate = DateTime(now.year, now.month, now.day - 7);
+        break;
+      case ReportPeriod.month:
+        startDate = DateTime(now.year, now.month - 1, now.day);
+        break;
+      case ReportPeriod.year:
+        startDate = DateTime(now.year - 1, now.month, now.day);
+        break;
+    }
     
     // Başarılı ilaç sayısı (uyum oranı > %80)
     final successfulMedications = _adherenceReports
@@ -198,15 +214,15 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     final int totalTakenDoses = _adherenceReports.fold(0, (sum, report) => sum + report.takenDoses);
     
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(AppDimens.paddingM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [          // Dönem bilgisi
+        children: [
           Text(
-            _getReportPeriodTitle(),
-            style: AppTextStyles.heading2,
+            _getFormattedDateRange(startDate, now, loc),
+            style: AppTextStyles.subtitle,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimens.paddingM),
           
           // Genel uyum kartı
           Card(
@@ -233,9 +249,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                       fontWeight: FontWeight.bold,
                       color: _getAdherenceColor(overallAdherence),
                     ),
-                  ),                  const SizedBox(height: 8),
-                  Text(
-                    'Toplam $totalTakenDoses / $totalPlannedDoses doz alındı',
+                  ),                  const SizedBox(height: 8),                  Text(
+                    loc.translate('total_doses_format')
+                      .replaceAll('{taken}', totalTakenDoses.toString())
+                      .replaceAll('{planned}', totalPlannedDoses.toString()),
                     style: AppTextStyles.bodyTextSmall,
                   ),
                 ],
@@ -246,10 +263,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           
           // Performans kartları
           Row(
-            children: [
-              Expanded(
+            children: [              Expanded(
                 child: _buildPerformanceCard(
-                  'İyi',
+                  loc.translate('good'),
                   successfulMedications,
                   _adherenceReports.length,
                   Colors.green,
@@ -258,7 +274,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               const SizedBox(width: 8),
               Expanded(
                 child: _buildPerformanceCard(
-                  'Orta',
+                  loc.translate('medium'),
                   partialSuccessMedications,
                   _adherenceReports.length,
                   Colors.orange,
@@ -267,7 +283,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               const SizedBox(width: 8),
               Expanded(
                 child: _buildPerformanceCard(
-                  'Düşük',
+                  loc.translate('low'),
                   lowPerformanceMedications,
                   _adherenceReports.length,
                   Colors.red,
@@ -275,10 +291,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               ),
             ],
           ),
-          const SizedBox(height: 24),
-            // En kötü performanslı ilaçlar
+          const SizedBox(height: 24),            // En kötü performanslı ilaçlar
           Text(
-            'Dikkat Edilmesi Gereken İlaçlar',
+            loc.translate('medications_to_watch'),
             style: AppTextStyles.heading3,
           ),
           const SizedBox(height: 8),
@@ -289,6 +304,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
   
   Widget _buildPerformanceCard(String title, int count, int total, Color color) {
+    final loc = AppLocalizations.of(context);
     final percentage = total > 0 ? (count / total * 100).round() : 0;
     
     return Card(
@@ -310,16 +326,16 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               ),
             ),
             Text(
-              'ilaç (%$percentage)',
+              loc.translate('medication_count_percentage').replaceAll('{percentage}', percentage.toString()),
               style: AppTextStyles.caption,
             ),
           ],
-        ),
-      ),
+        ),      ),
     );
   }
   
   List<Widget> _buildWorstPerformingMedicationsWidgets() {
+    final loc = AppLocalizations.of(context);
     // En düşük uyum oranlı 3 ilaç
     final worstReports = List.of(_adherenceReports)
       ..sort((a, b) => a.adherenceRate.compareTo(b.adherenceRate));
@@ -328,10 +344,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     
     if (displayReports.isEmpty) {
       return [
-        const Card(
+        Card(
           child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('Henüz yeterli ilaç kullanım verisi bulunmuyor.'),
+            padding: const EdgeInsets.all(16.0),
+            child: Text(loc.translate('no_medication_data')),
           ),
         ),
       ];
@@ -347,9 +363,11 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               style: const TextStyle(color: Colors.white),
             ),
           ),
-          title: Text(report.medication.name),
-          subtitle: Text(
-            'Uyum: %${(report.adherenceRate * 100).round()} - ${report.takenDoses}/${report.totalDoses} doz',
+          title: Text(report.medication.name),          subtitle: Text(
+            loc.translate('adherence_dose_count')
+                .replaceAll('{adherence}', '${(report.adherenceRate * 100).round()}')
+                .replaceAll('{taken}', '${report.takenDoses}')
+                .replaceAll('{total}', '${report.totalDoses}'),
           ),
           trailing: Icon(
             Icons.warning,
@@ -359,11 +377,11 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       );
     }).toList();
   }
-  
-  Widget _buildAdherenceReportsTab() {
+    Widget _buildAdherenceReportsTab() {
+    final loc = AppLocalizations.of(context);
     if (_adherenceReports.isEmpty) {
-      return const Center(
-        child: Text('Henüz ilaç kullanım verisi bulunmuyor.'),
+      return Center(
+        child: Text(loc.translate('no_medication_data')),
       );
     }
     
@@ -441,24 +459,23 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatColumn(
-                      'Alınan',
+                  children: [                    _buildStatColumn(
+                      loc.translate('taken_doses'),
                       report.takenDoses,
                       Colors.green,
                     ),
                     _buildStatColumn(
-                      'Atlanmış',
+                      loc.translate('skipped_doses'),
                       report.skippedDoses,
                       Colors.red,
                     ),
                     _buildStatColumn(
-                      'Gecikmiş',
+                      loc.translate('delayed_doses'),
                       report.delayedDoses,
                       Colors.orange,
                     ),
                     _buildStatColumn(
-                      'Toplam',
+                      loc.translate('total_doses'),
                       report.totalDoses,
                       Colors.blue,
                     ),
@@ -490,22 +507,22 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       ],
     );
   }
-  
-  Widget _buildMedicationDetailsTab() {
+    Widget _buildMedicationDetailsTab() {
+    final loc = AppLocalizations.of(context);
+    
     if (_medications.isEmpty) {
-      return const Center(
-        child: Text('Henüz ilaç kaydı bulunmuyor.'),
+      return Center(
+        child: Text(loc.translate('no_medication_data')),
       );
     }
     
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
-              labelText: 'İlaç Seçin',
-              border: OutlineInputBorder(),
+          padding: const EdgeInsets.all(16.0),          child: DropdownButtonFormField<String>(
+            decoration: InputDecoration(
+              labelText: loc.translate('select_medication'),
+              border: const OutlineInputBorder(),
             ),
             value: _selectedMedicationId,
             items: _medications.map((medication) {
@@ -529,23 +546,22 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
               future: _reportService.getDailyAdherenceDetails(
                 _selectedMedicationId!,
                 startDate: _getStartDateForPeriod(),
-              ),
-              builder: (context, snapshot) {
+              ),              builder: (context, snapshot) {
+                final loc = AppLocalizations.of(context);
+                
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
-                if (snapshot.hasError) {
+                  if (snapshot.hasError) {
                   return Center(
-                    child: Text('Hata: ${snapshot.error}'),
+                    child: Text('${loc.translate('error')}: ${snapshot.error}'),
                   );
                 }
                 
                 final details = snapshot.data ?? [];
-                
-                if (details.isEmpty) {
-                  return const Center(
-                    child: Text('Bu ilaç için kayıt bulunamadı.'),
+                  if (details.isEmpty) {
+                  return Center(
+                    child: Text(loc.translate('no_records_for_medication')),
                   );
                 }
                 
@@ -556,8 +572,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       ],
     );
   }
-  
-  Widget _buildDailyAdherenceChart(List<DailyAdherenceDetail> details) {
+    Widget _buildDailyAdherenceChart(List<DailyAdherenceDetail> details) {
+    final loc = AppLocalizations.of(context);
     // Tarih formatı
     final dateFormat = DateFormat('dd/MM');
     
@@ -567,9 +583,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            children: [
-              const Text(
-                'Günlük İlaç Uyum Grafiği',
+            children: [              Text(
+                loc.translate('daily_medication_adherence'),
                 style: AppTextStyles.subtitle,
               ),
               const SizedBox(height: 16),
@@ -665,16 +680,15 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              // Renk açıklamaları
+              const SizedBox(height: 16),              // Renk açıklamaları
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildLegendItem('İyi', Colors.green),
+                  _buildLegendItem(loc.translate('good'), Colors.green),
                   const SizedBox(width: 16),
-                  _buildLegendItem('Orta', Colors.orange),
+                  _buildLegendItem(loc.translate('medium'), Colors.orange),
                   const SizedBox(width: 16),
-                  _buildLegendItem('Düşük', Colors.red),
+                  _buildLegendItem(loc.translate('low'), Colors.red),
                 ],
               ),
             ],
@@ -713,14 +727,31 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   }
   
   // Rapor dönemi başlığını al
-  String _getReportPeriodTitle() {
-    final now = DateTime.now();
-    final startDate = _getStartDateForPeriod();
+  String _getFormattedDateRange(DateTime startDate, DateTime endDate, AppLocalizations loc) {
+    String getMonthName(int month) {
+      final monthNames = {
+        1: 'month_january',
+        2: 'month_february',
+        3: 'month_march',
+        4: 'month_april',
+        5: 'month_may',
+        6: 'month_june',
+        7: 'month_july',
+        8: 'month_august',
+        9: 'month_september',
+        10: 'month_october',
+        11: 'month_november',
+        12: 'month_december',
+      };
+      return loc.translate(monthNames[month] ?? '');
+    }
+
+    final startDateStr = '${startDate.day} ${getMonthName(startDate.month)}';
+    final endDateStr = '${endDate.day} ${getMonthName(endDate.month)} ${endDate.year}';
     
-    final startText = DateFormat('d MMMM').format(startDate);
-    final endText = DateFormat('d MMMM yyyy').format(now);
-    
-    return '$startText - $endText Dönemi';
+    return loc.translate('date_format_period')
+        .replaceAll('{startDate}', startDateStr)
+        .replaceAll('{endDate}', endDateStr);
   }
     // Dönem başlangıç tarihini al
   DateTime _getStartDateForPeriod() {
@@ -735,9 +766,9 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         return DateTime(now.year - 1, now.month, now.day);
     }
   }
-  
-  // Sağlık metrikleri sekmesi
+    // Sağlık metrikleri sekmesi
   Widget _buildHealthMetricsTab() {
+    final loc = AppLocalizations.of(context);
     return Consumer<UserProfileProvider>(
       builder: (context, userProfileProvider, child) {
         if (userProfileProvider.isLoading) {
@@ -755,24 +786,22 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                   size: 64,
                   color: AppColors.textSecondary,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Sağlık metrikleriniz görüntülenemedi',
+                const SizedBox(height: 16),                Text(
+                  loc.translate('health_metrics_not_available'),
                   style: AppTextStyles.heading3,
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Boy ve kilo bilgilerinizi profilinizden ekleyerek\nsağlık metriklerinizi görüntüleyebilirsiniz.',
+                Text(
+                  loc.translate('add_height_weight_prompt'),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
+                const SizedBox(height: 24),                ElevatedButton.icon(
                   onPressed: () {
                     // Profil sekmesine yönlendir (bottom tab'ı seç)
                     Navigator.of(context).pushNamed('/profile');
                   },
                   icon: const Icon(Icons.person),
-                  label: const Text('Profil Bilgilerimi Düzenle'),
+                  label: Text(loc.translate('edit_profile_info')),
                 ),
               ],
             ),
@@ -814,31 +843,29 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                   padding: const EdgeInsets.all(AppDimens.paddingM),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Vücut Ölçümleri',
+                    children: [                      Text(
+                        loc.translate('body_measurements'),
                         style: AppTextStyles.heading3,
                       ),
                       const SizedBox(height: AppDimens.paddingM),
                       Row(
-                        children: [
-                          _buildMetricCard(
+                        children: [                          _buildMetricCard(
                             icon: Icons.height,
-                            title: 'Boy',
+                            title: loc.translate('height'),
                             value: '${userProfile.height!.toStringAsFixed(0)} cm',
                             color: AppColors.primary,
                           ),
                           const SizedBox(width: AppDimens.paddingM),
                           _buildMetricCard(
                             icon: Icons.monitor_weight,
-                            title: 'Kilo',
+                            title: loc.translate('weight'),
                             value: '${userProfile.weight!.toStringAsFixed(1)} kg',
                             color: AppColors.secondary,
                           ),
                           const SizedBox(width: AppDimens.paddingM),
                           _buildMetricCard(
                             icon: Icons.favorite,
-                            title: 'VKİ',
+                            title: loc.translate('bmi'),
                             value: userProfile.bmi!.toStringAsFixed(1),
                             color: _getBmiStatusColor(userProfile.bmi!),
                           ),
@@ -872,9 +899,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                   padding: const EdgeInsets.all(AppDimens.paddingM),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Sağlık Tavsiyeleri',
+                    children: [                      Text(
+                        loc.translate('health_advice'),
                         style: AppTextStyles.heading3,
                       ),
                       const SizedBox(height: AppDimens.paddingM),
@@ -926,32 +952,31 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       ),
     );
   }
-  
-  Widget _buildHealthAdvice(UserProfile userProfile) {
+    Widget _buildHealthAdvice(UserProfile userProfile) {
+    final loc = AppLocalizations.of(context);
     final bmi = userProfile.bmi;
     
     if (bmi == null) {
-      return const Text('Boy ve kilo bilgilerinizi girerek kişiselleştirilmiş sağlık tavsiyelerine erişebilirsiniz.');
+      return Text(loc.translate('health_advice_message'));
     }
     
     String advice;
     IconData icon;
     Color color;
-    
-    if (bmi < 18.5) {
-      advice = 'Vücut kitle indeksiniz düşük seviyede. Sağlıklı kilo almak için dengeli beslenmeye özen göstermeniz ve protein açısından zengin gıdalar tüketmeniz önerilir.';
+      if (bmi < 18.5) {
+      advice = loc.translate('bmi_thin_advice');
       icon = Icons.arrow_downward;
       color = Colors.blue;
     } else if (bmi < 25) {
-      advice = 'Vücut kitle indeksiniz normal aralıkta. Mevcut sağlıklı yaşam tarzınızı sürdürün ve düzenli fiziksel aktivitenizi devam ettirin.';
+      advice = loc.translate('bmi_normal_advice');
       icon = Icons.check_circle;
       color = Colors.green;
     } else if (bmi < 30) {
-      advice = 'Vücut kitle indeksiniz fazla kilolu aralığında. Dengeli beslenmeye dikkat edin ve düzenli egzersizle kilonuzu kontrol altında tutmaya çalışın.';
+      advice = loc.translate('bmi_overweight_advice');
       icon = Icons.warning;
       color = Colors.orange;
     } else {
-      advice = 'Vücut kitle indeksiniz obezite aralığında. Doktor kontrolünde kilo vermeyi hedefleyin ve beslenme alışkanlıklarınızı gözden geçirin.';
+      advice = loc.translate('bmi_obese_advice');
       icon = Icons.error;
       color = Colors.red;
     }
@@ -978,14 +1003,13 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         child: Text(advice),
       ),
       isThreeLine: true,
-    );
-  }
-  
-  String _getBmiStatusText(double bmi) {
-    if (bmi < 18.5) return 'Zayıf';
-    if (bmi < 25) return 'Normal';
-    if (bmi < 30) return 'Fazla Kilolu';
-    return 'Obez';
+    );  }
+    String _getBmiStatusText(double bmi) {
+    final loc = AppLocalizations.of(context);
+    if (bmi < 18.5) return loc.translate('bmi_thin');
+    if (bmi < 25) return loc.translate('bmi_normal');
+    if (bmi < 30) return loc.translate('bmi_overweight');
+    return loc.translate('bmi_obese_value');
   }
   
   Color _getBmiStatusColor(double bmi) {

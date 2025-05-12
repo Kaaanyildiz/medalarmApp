@@ -241,12 +241,22 @@ class AppConstants {
     final loc = AppLocalizations.of(context);
     return loc.translate(dayKey);
   }
-  
-  // Uygulama adı
+    // Uygulama adı
   static const appName = 'MedAlarm';
   
   // Uygulama sürümü
   static const appVersion = '1.0.0';
+  
+  // Hafta günleri haritası
+  static const Map<String, String> weekDaysMap = {
+    'monday': 'Pazartesi',
+    'tuesday': 'Salı',
+    'wednesday': 'Çarşamba',
+    'thursday': 'Perşembe',
+    'friday': 'Cuma',
+    'saturday': 'Cumartesi',
+    'sunday': 'Pazar',
+  };
   
   // Bildirim kanalı ID'si
   static const notificationChannelId = 'medication_reminders';

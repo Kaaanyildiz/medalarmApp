@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/widgets/locale_change_handler.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
 import 'package:medalarmm/features/onboarding/providers/theme_provider.dart';
 import 'package:medalarmm/features/onboarding/providers/locale_provider.dart';
@@ -19,7 +20,7 @@ import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Yerelleştirme verilerini başlat
@@ -32,8 +33,21 @@ void main() async {
   
   final notificationService = NotificationService();
   await notificationService.init();
-  
-  runApp(const MyApp());
+
+  // Uygulama başlatma
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MedicationProvider()),
+        ChangeNotifierProvider(create: (_) => UserProfileProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+      ],
+      child: const LocaleChangeHandler(
+        child: MyApp(),
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -41,58 +55,63 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => MedicationProvider()),
-        ChangeNotifierProvider(create: (_) => UserProfileProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => LocaleProvider()),
-      ],
-      child: Consumer2<ThemeProvider, LocaleProvider>(
-        builder: (context, themeProvider, localeProvider, _) {
-          // Tema durumunu AppColorScheme'e aktar
-          AppColorScheme.isDarkMode = themeProvider.isDarkMode;
-            return MaterialApp(            
-            title: 'MedAlarm',
-            debugShowCheckedModeBanner: false,
-            theme: _getThemeData(isDark: false),
-            darkTheme: _getThemeData(isDark: true),
-            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            
-            // Çoklu dil desteği
-            locale: localeProvider.locale,
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            localeResolutionCallback: AppLocalizations.localeResolutionCallback,
-            
-            home: const SplashScreen(),
-            // Rota tanımlamaları 
-            routes: {
-              '/medications/add': (context) => const AddMedicationScreen(),
-              '/medications/list': (context) => const MedicationListScreen(),
-              '/calendar': (context) => const CalendarScreen(),
-              '/reports': (context) => const ReportsScreen(),
-              '/profile': (context) => const ProfileScreen(),
-              '/inventory': (context) => const InventoryScreen(),
-              '/language_settings': (context) => const LanguageSettingsScreen(),
-              // Detail ekranı için parametre gerekiyor, onNavigator.push ile kullanılacak
-            },
+    return Consumer2<ThemeProvider, LocaleProvider>(
+      builder: (context, themeProvider, localeProvider, _) {
+        if (!localeProvider.isInitialized) {
+          return const MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
           );
-        },
-      ),
+        }
+
+        AppColorScheme.isDarkMode = themeProvider.isDarkMode;
+        return MaterialApp(
+          key: ValueKey('app_${localeProvider.locale.languageCode}'),
+          title: 'MedAlarm',
+          debugShowCheckedModeBanner: false,
+          theme: _getThemeData(isDark: false),
+          darkTheme: _getThemeData(isDark: true),
+          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          
+          // Çoklu dil desteği
+          locale: localeProvider.locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          localeResolutionCallback: (locale, supportedLocales) {
+            for (var supportedLocale in supportedLocales) {
+              if (supportedLocale.languageCode == locale?.languageCode) {
+                return supportedLocale;
+              }
+            }
+            return const Locale('tr', 'TR');
+          },
+          
+          home: const SplashScreen(),
+          routes: {
+            '/medications/add': (context) => const AddMedicationScreen(),
+            '/medications/list': (context) => const MedicationListScreen(),
+            '/calendar': (context) => const CalendarScreen(),
+            '/reports': (context) => const ReportsScreen(),
+            '/profile': (context) => const ProfileScreen(),
+            '/inventory': (context) => const InventoryScreen(),
+            '/language_settings': (context) => const LanguageSettingsScreen(),
+          },
+        );
+      },
     );
   }
-    /// Tema oluştur (açık/koyu tema)
+
   ThemeData _getThemeData({required bool isDark}) {
-    // Tema durumunu AppColorScheme'e aktar
     AppColorScheme.isDarkMode = isDark;
     
-    // Renk şeması
     final colorScheme = ColorScheme.fromSeed(
       brightness: isDark ? Brightness.dark : Brightness.light,
       seedColor: isDark ? AppColors.primaryDark_ : AppColors.primary,
@@ -248,9 +267,9 @@ class MyApp extends StatelessWidget {
       ),
       fontFamily: 'Poppins',
       useMaterial3: true,
-      );
-     } 
-    }    
+    );
+  }
+}    
  
 
 

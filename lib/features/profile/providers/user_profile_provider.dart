@@ -2,15 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:medalarmm/core/models/user_profile.dart';
 import 'package:medalarmm/core/services/database_service.dart';
+import 'package:medalarmm/features/notifications/models/notification_settings.dart';
 
 class UserProfileProvider with ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
   
   UserProfile? _userProfile;
   bool _isLoading = false;
+  NotificationSettings _notificationSettings = NotificationSettings();
 
   UserProfile? get userProfile => _userProfile;
   bool get isLoading => _isLoading;
+  NotificationSettings get notificationSettings => _notificationSettings;
   // Kullanıcı profilini yükle
   Future<void> loadUserProfile() async {
     _setLoading(true);
@@ -118,5 +121,11 @@ class UserProfileProvider with ChangeNotifier {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();
     });
+  }
+
+  Future<void> updateNotificationSettings(NotificationSettings settings) async {
+    _notificationSettings = settings;
+    notifyListeners();
+    // TODO: Implement persistence
   }
 }

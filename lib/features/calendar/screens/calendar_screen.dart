@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:medalarmm/common/constants/app_constants.dart';
+import 'package:medalarmm/common/l10n/app_localizations.dart';
 import 'package:medalarmm/features/medications/models/medication.dart';
 import 'package:medalarmm/features/medications/models/medication_log.dart';
 import 'package:medalarmm/features/medications/providers/medication_provider.dart';
@@ -27,14 +28,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
   
   // İlaç - renk eşleştirmeleri
   Map<String, Color> _medicationColors = {};
+  
   @override
   void initState() {
     super.initState();
-    // Önce yerelleştirme verilerini başlat
-    initializeDateFormatting('tr_TR', null).then((_) {
-      _loadLogsForCalendar();
-    });
+    _loadLogsForCalendar();
   }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Yerelleştirme verilerini başlat
+    final locale = Localizations.localeOf(context).languageCode;
+    final localeCode = locale == 'en' ? 'en_US' : 'tr_TR';
+    initializeDateFormatting(localeCode, null);
+  }
+  
   // Takvim için tüm logları yükle
   Future<void> _loadLogsForCalendar() async {
     setState(() {
@@ -104,11 +113,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
         });
       }
     } catch (e) {
-      print('Takvim verileri yüklenirken hata: $e');
+      print('Error loading calendar data: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
-        });      }
+        });
+      }
     }
   }
   
@@ -130,18 +140,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
         });
       }
     } catch (e) {
-      print('Seçili gün verileri yüklenirken hata: $e');
+      print('Error loading selected day data: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
-        });      }
+        });
+      }
     }
   }
-    @override
+  
+  @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('İlaç Takvimi'),
+        title: Text(loc.translate('calendar')),
         centerTitle: true,
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -150,14 +163,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadLogsForCalendar,
-            tooltip: 'Takvimi Yenile',
+            tooltip: loc.translate('refresh'),
           ),
         ],
       ),
       body: _isLoading && _events.isEmpty
-          ? const Center(
+          ? Center(
               child: LoadingIndicator(
-                message: 'Takvim verileri yükleniyor...',
+                message: loc.translate('loading') + '...',
               ),
             )
           : Column(
@@ -205,7 +218,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       const SizedBox(width: AppDimens.paddingS),
                       Text(
-                        'Günlük İlaç Çizelgesi',
+                        loc.translate('daily_medication_schedule'),
                         style: AppTextStyles.heading3.copyWith(
                           color: AppColors.primary,
                         ),
@@ -221,6 +234,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
     );
   }
+  
   Widget _buildCalendar() {
     return TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
@@ -236,7 +250,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         });
         // Seçilen gün için ilaç kayıtlarını yükle
         _loadLogsForSelectedDay();
-      },      onPageChanged: (focusedDay) {
+      },
+      onPageChanged: (focusedDay) {
         // Sayfa değiştiğinde, ilgili ayın loglarını oluştur
         _focusedDay = focusedDay;
         
@@ -329,7 +344,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   color: markerColor,
                 ),
               ),
-            );            count++;
+            );
+            count++;
           });
             
           // Positioned widget'ı bir Stack içinde olmalı ve Stack'e boyut verilmeli
@@ -353,9 +369,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           // Yerelleştirme hatalarını önlemek için try/catch kullanıyoruz
           String text;
           try {
-            text = DateFormat.E('tr_TR').format(day);
+            final locale = Localizations.localeOf(context).languageCode;
+            final localeCode = locale == 'en' ? 'en_US' : 'tr_TR';
+            text = DateFormat.E(localeCode).format(day);
           } catch (e) {
-            // Eğer tr_TR için yerelleştirme verisi yüklenemezse, varsayılan formatı kullan
+            // Yerelleştirme verisi yüklenemezse, varsayılan formatı kullan
             text = DateFormat.E().format(day);
           }
           
@@ -372,17 +390,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
       eventLoader: (day) {
         final normalizedDay = DateTime(day.year, day.month, day.day);
         final list = _events[normalizedDay];
-        return list ?? [];      },
+        return list ?? [];
+      },
     );
   }
   
   Widget _buildDailySchedule() {
+    final loc = AppLocalizations.of(context);
+    
     // Yerelleştirme ile ilgili hataları önlemek için try/catch kullanıyoruz
     DateFormat dateFormat;
     try {
-      dateFormat = DateFormat('d MMMM yyyy EEEE', 'tr_TR');
+      final locale = Localizations.localeOf(context).languageCode;
+      final localeCode = locale == 'en' ? 'en_US' : 'tr_TR';
+      dateFormat = DateFormat('d MMMM yyyy EEEE', localeCode);
     } catch (e) {
-      // Eğer tr_TR için yerelleştirme verisi yüklenemezse, varsayılan yerelleştirmeyi kullan
+      // Yerelleştirme verisi yüklenemezse, varsayılan yerelleştirmeyi kullan
       dateFormat = DateFormat('d MMMM yyyy EEEE');
     }
     
@@ -393,7 +416,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         padding: const EdgeInsets.all(AppDimens.paddingM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [            // Tarih başlığı ve ilaç sayısı
+          children: [
+            // Tarih başlığı ve ilaç sayısı
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -414,7 +438,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       borderRadius: BorderRadius.circular(AppDimens.radiusL),
                     ),
                     child: Text(
-                      '${_selectedDayLogs.length} İlaç',
+                      loc.translate('medication_count').replaceFirst('{count}', _selectedDayLogs.length.toString()),
                       style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
@@ -426,9 +450,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
             const SizedBox(height: AppDimens.paddingM),
             // İlaç listesi - Expanded widget kullanımı düzeltildi
             Flexible(
-              fit: FlexFit.tight,              child: _isLoading
-                  ? const LoadingIndicator(
-                      message: 'İlaç bilgileri yükleniyor...',
+              fit: FlexFit.tight,
+              child: _isLoading
+                      ? LoadingIndicator(
+                      message: loc.translate('loading_medication_info'),
                     )
                   : _selectedDayLogs.isEmpty
                       ? Center(
@@ -442,7 +467,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               ),
                               const SizedBox(height: AppDimens.paddingM),
                               Text(
-                                'Bu tarihte planlanmış ilaç kaydı yok',
+                                loc.translate('no_medication_planned'),
                                 style: AppTextStyles.bodyText.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
@@ -455,7 +480,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   Navigator.pushNamed(context, '/medications/add');
                                 },
                                 icon: const Icon(Icons.add),
-                                label: const Text('Yeni İlaç Ekle'),
+                                label: Text(loc.translate('add_new_medication')),
                               ),
                             ],
                           ),
@@ -478,7 +503,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 }
                                 
                                 final medication = snapshot.data;
-                                final medicationName = medication?.name ?? 'Bilinmeyen İlaç';
+                                final medicationName = medication?.name ?? loc.translate('unknown_medication');
                                 final medicationDosage = medication?.dosage ?? '';
                                 final medicationColor = medication?.color ?? AppColors.primary;
                                 
@@ -490,21 +515,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 if (log.isTaken) {
                                   statusColor = AppColors.success;
                                   statusIcon = Icons.check_circle;
-                                  statusText = 'Alındı';
+                                  statusText = loc.translate('status_taken');
                                 } else if (log.isSkipped) {
                                   statusColor = AppColors.warning;
                                   statusIcon = Icons.cancel_outlined;
-                                  statusText = 'Atlandı';
+                                  statusText = loc.translate('status_skipped');
                                 } else if (DateTime.now().isAfter(log.scheduledTime)) {
                                   statusColor = AppColors.error;
                                   statusIcon = Icons.error_outline;
-                                  statusText = 'Alınmadı';
+                                  statusText = loc.translate('status_missed');
                                 } else {
                                   statusColor = AppColors.primary;
                                   statusIcon = Icons.schedule;
-                                  statusText = 'Bekliyor';
+                                  statusText = loc.translate('status_waiting');
                                 }
-                                  return Card(
+                                
+                                return Card(
                                   margin: const EdgeInsets.only(bottom: AppDimens.paddingM),
                                   elevation: 2,
                                   shape: RoundedRectangleBorder(
@@ -585,7 +611,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                                   ),
                                                   const SizedBox(width: AppDimens.paddingXS),
                                                   Text(
-                                                    'Planlanan: ${timeFormat.format(log.scheduledTime)}',
+                                                    '${loc.translate('scheduled')}: ${timeFormat.format(log.scheduledTime)}',
                                                     style: AppTextStyles.bodyTextSmall,
                                                   ),
                                                 ],
@@ -601,7 +627,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                                     ),
                                                     const SizedBox(width: AppDimens.paddingXS),
                                                     Text(
-                                                      'Alındı: ${timeFormat.format(log.takenTime!)}',
+                                                      '${loc.translate('taken')}: ${timeFormat.format(log.takenTime!)}',
                                                       style: AppTextStyles.bodyTextSmall.copyWith(
                                                         color: AppColors.success,
                                                       ),
@@ -609,7 +635,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                                     if (log.delayInMinutes != null && log.delayInMinutes! > 0) ...[
                                                       const SizedBox(width: AppDimens.paddingS),
                                                       Text(
-                                                        '(${log.delayInMinutes} dk gecikme)',
+                                                        '(${log.delayInMinutes} ${loc.translate('minute_abbreviation')} ${loc.translate('delay')})',
                                                         style: AppTextStyles.bodyTextSmall.copyWith(
                                                           color: log.delayInMinutes! > 30 
                                                               ? AppColors.error 
@@ -633,7 +659,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                                     const SizedBox(width: AppDimens.paddingXS),
                                                     Expanded(
                                                       child: Text(
-                                                        'Not: ${log.notes}',
+                                                        '${loc.translate('note')}: ${log.notes}',
                                                         style: AppTextStyles.bodyTextSmall.copyWith(
                                                           fontStyle: FontStyle.italic,
                                                         ),
@@ -644,7 +670,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                               ],
                                             ],
                                           ),
-                                        ),                                        if (!log.isTaken && !log.isSkipped) ...[
+                                        ),
+                                        if (!log.isTaken && !log.isSkipped) ...[
                                           Column(
                                             children: [
                                               ElevatedButton.icon(
@@ -660,13 +687,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                                   ),
                                                 ),
                                                 icon: const Icon(Icons.check, size: 16),
-                                                label: const Text('Aldım'),
+                                                label: Text(loc.translate('take')),
                                               ),
                                               const SizedBox(height: AppDimens.paddingXS),
                                               TextButton.icon(
                                                 onPressed: () => _showSkipDialog(log),
                                                 icon: const Icon(Icons.remove_circle_outline, size: 16),
-                                                label: const Text('Atla'),
+                                                label: Text(loc.translate('skip')),
                                               ),
                                             ],
                                           ),
@@ -681,7 +708,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
             ),
           ],
-        ),      ),
+        ),
+      ),
     );
   }
   
@@ -692,6 +720,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     
     try {
       final provider = Provider.of<MedicationProvider>(context, listen: false);
+      final loc = AppLocalizations.of(context);
+      
       await provider.markMedicationAsTaken(
         medicationId: log.medicationId, 
         scheduledTime: log.scheduledTime
@@ -700,16 +730,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       // Kullanıcıya bilgilendirme göster
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
-                Text('İlaç başarıyla alındı olarak işaretlendi'),
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(loc.translate('medication_marked_as_taken')),
               ],
             ),
             backgroundColor: AppColors.success,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -717,40 +747,44 @@ class _CalendarScreenState extends State<CalendarScreen> {
       // Takvimi ve seçili günü yenile
       await _loadLogsForCalendar();
     } catch (e) {
-      print('İlaç alındı olarak işaretlenirken hata: $e');
+      print('Error marking medication as taken: $e');
+      
       if (mounted) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: ${e.toString()}'),
+            content: Text('${loc.translate('error')}: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );
       }
       
       setState(() {
-        _isLoading = false;      });
+        _isLoading = false;
+      });
     }
   }
   
   Future<void> _showSkipDialog(MedicationLog log) async {
     final TextEditingController noteController = TextEditingController();
+    final loc = AppLocalizations.of(context);
     
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('İlacı Atla'),
+        title: Text(loc.translate('skip_medication')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Bu ilacı almayı atlamak istediğinizden emin misiniz?'),
+            Text(loc.translate('skip_confirmation')),
             const SizedBox(height: 16),
             TextField(
               controller: noteController,
-              decoration: const InputDecoration(
-                labelText: 'Not (isteğe bağlı)',
-                hintText: 'Atlama nedenini belirtebilirsiniz',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: loc.translate('optional_note'),
+                hintText: loc.translate('skip_reason_hint'),
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
             ),
@@ -759,14 +793,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
+            child: Text(loc.translate('cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.warning,
             ),
-            child: const Text('Atla'),
+            child: Text(loc.translate('skip')),
           ),
         ],
       ),
@@ -788,8 +822,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         // Kullanıcıya bilgilendirme göster
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('İlaç atlandı olarak işaretlendi'),
+            SnackBar(
+              content: Text(loc.translate('medication_marked_as_skipped')),
               backgroundColor: AppColors.warning,
             ),
           );
@@ -798,11 +832,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
         // Takvimi ve seçili günü yenile
         await _loadLogsForCalendar();
       } catch (e) {
-        print('İlaç atlandı olarak işaretlenirken hata: $e');
+        print('Error marking medication as skipped: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Hata: ${e.toString()}'),
+              content: Text('${loc.translate('error')}: ${e.toString()}'),
               backgroundColor: AppColors.error,
             ),
           );

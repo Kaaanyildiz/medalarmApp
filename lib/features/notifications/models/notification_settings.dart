@@ -1,58 +1,63 @@
 class NotificationSettings {
-  final bool enableNotifications; // Bildirimleri etkinleştirme
-  final bool enableAlarms; // Alarmları etkinleştirme
-  final int alarmDuration; // Alarm süresi (saniye)
-  final AlarmType alarmType; // Alarm tipi
-  final bool vibrate; // Titreşim etkinleştirme
-  final int reminderInterval; // Hatırlatma aralığı (dakika olarak, örn. 5 dakika sonra tekrar hatırlat)
+  final bool notificationsEnabled;
+  final bool soundEnabled;
+  final bool vibrationEnabled;
+  final AlarmType alarmType;
+  final int reminderInterval;
+  final int alarmDuration;  // Alarm süresi (saniye)
 
-  NotificationSettings({
-    this.enableNotifications = true,
-    this.enableAlarms = true,
-    this.alarmDuration = 30, // 30 saniye varsayılan
+  const NotificationSettings({
+    this.notificationsEnabled = true,
+    this.soundEnabled = true,
+    this.vibrationEnabled = true,
     this.alarmType = AlarmType.medicationAlarm,
-    this.vibrate = true,
-    this.reminderInterval = 5, // 5 dakika varsayılan
+    this.reminderInterval = 15,
+    this.alarmDuration = 30,  // Varsayılan 30 saniye
   });
 
+  // Eski isimlerle uyumluluk için getter'lar
+  bool get enableNotifications => notificationsEnabled;
+  bool get enableAlarms => soundEnabled;
+  bool get vibrate => vibrationEnabled;
+
   NotificationSettings copyWith({
-    bool? enableNotifications,
-    bool? enableAlarms,
-    int? alarmDuration,
+    bool? notificationsEnabled,
+    bool? soundEnabled,
+    bool? vibrationEnabled,
     AlarmType? alarmType,
-    bool? vibrate,
     int? reminderInterval,
+    int? alarmDuration,
   }) {
     return NotificationSettings(
-      enableNotifications: enableNotifications ?? this.enableNotifications,
-      enableAlarms: enableAlarms ?? this.enableAlarms,
-      alarmDuration: alarmDuration ?? this.alarmDuration,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
+      vibrationEnabled: vibrationEnabled ?? this.vibrationEnabled,
       alarmType: alarmType ?? this.alarmType,
-      vibrate: vibrate ?? this.vibrate,
       reminderInterval: reminderInterval ?? this.reminderInterval,
+      alarmDuration: alarmDuration ?? this.alarmDuration,
     );
   }
 
   // JSON dönüşümleri
   Map<String, dynamic> toJson() {
     return {
-      'enableNotifications': enableNotifications,
-      'enableAlarms': enableAlarms,
-      'alarmDuration': alarmDuration,
+      'notificationsEnabled': notificationsEnabled,
+      'soundEnabled': soundEnabled,
+      'vibrationEnabled': vibrationEnabled,
       'alarmType': alarmType.index,
-      'vibrate': vibrate,
       'reminderInterval': reminderInterval,
+      'alarmDuration': alarmDuration,
     };
   }
 
   factory NotificationSettings.fromJson(Map<String, dynamic> json) {
     return NotificationSettings(
-      enableNotifications: json['enableNotifications'] ?? true,
-      enableAlarms: json['enableAlarms'] ?? true,
-      alarmDuration: json['alarmDuration'] ?? 30,
+      notificationsEnabled: json['notificationsEnabled'] ?? true,
+      soundEnabled: json['soundEnabled'] ?? true,
+      vibrationEnabled: json['vibrationEnabled'] ?? true,
       alarmType: AlarmType.values[json['alarmType'] ?? 0],
-      vibrate: json['vibrate'] ?? true,
-      reminderInterval: json['reminderInterval'] ?? 5,
+      reminderInterval: json['reminderInterval'] ?? 15,
+      alarmDuration: json['alarmDuration'] ?? 30,
     );
   }
 }
